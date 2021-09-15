@@ -1,0 +1,46 @@
+{
+  "name": "@bfchain/cryptolalia-tree",
+  "version": "1.0.0",
+  "description": "使用区块链的技术，对信息进行非对称加密，以及不可篡改的保护。",
+  "main": "./dist/cryptolalia-tree.es.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/cryptolalia-tree.es.js",
+      "require": "./dist/cryptolalia-tree.cjs.js"
+    }
+  },
+  "types": "./types/src/index.d.ts",
+  "imports": {
+    "#TimeHelper": {
+      "node": "./src/lib/TimeHelper.node.ts",
+      "default": "./src/lib/TimeHelper.web.ts"
+    },
+    "#StorageAdaptor.fs": {
+      "node": "./src/lib/StorageAdaptor.fs.node.ts"
+    }
+  },
+  "scripts": {
+    "dev": "vite build --watch --minify=false",
+    "clear": "rm -r types/* dist/*",
+    "build": "tsc && vite build",
+    "vite": "vite"
+  },
+  "files": [
+    "dist",
+    "types"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@bfchain/util": "^0.0.1-alpha.4",
+    "@types/node": "^16.9.1"
+  },
+  "devDependencies": {
+    "esbuild-plugin-tsc": "^0.3.0",
+    "tslib": "^2.3.1",
+    "typescript": "^4.4.3",
+    "vite": "^2.5.7"
+  }
+}
