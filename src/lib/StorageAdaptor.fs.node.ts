@@ -3,9 +3,23 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { Blob, Buffer } from "node:buffer";
+import { Inject } from "@bfchain/util";
 
+const ARGS = {
+  TARGET_DIR: Symbol("targetDir"),
+};
 class NodeFilesystemsStorageAdaptor extends StorageAdaptor {
-  currentPaths: Paths = path.normalize(process.cwd()).split(path.sep);
+  static readonly ARGS = ARGS;
+  constructor(
+    @Inject(ARGS.TARGET_DIR, { optional: true })
+    private targetDir: string = process.cwd(),
+  ) {
+    super();
+    if (!existsSync(targetDir)) {
+      fs.mkdir(targetDir, { recursive: true });
+    }
+  }
+  currentPaths: Paths = path.normalize(this.targetDir).split(path.sep);
   private getFilepath(paths: Paths) {
     return this.currentPaths.concat(paths).join(path.sep);
   }

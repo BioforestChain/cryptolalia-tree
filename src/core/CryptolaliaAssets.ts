@@ -1,3 +1,4 @@
+import { Injectable } from "@bfchain/util";
 import { StorageAdaptor } from "./StorageAdaptor";
 
 /**
@@ -7,6 +8,7 @@ import { StorageAdaptor } from "./StorageAdaptor";
  * 这些资源可能被清理。
  */
 
+@Injectable()
 export class CryptolaliaAssets {
   constructor(private storage: StorageAdaptor) {}
 

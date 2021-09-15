@@ -16,6 +16,9 @@
       "node": "./src/lib/TimeHelper.node.ts",
       "default": "./src/lib/TimeHelper.web.ts"
     },
+    "#CryptoHelper": {
+      "node": "./src/lib/CryptoHelper.node.ts"
+    },
     "#StorageAdaptor.fs": {
       "node": "./src/lib/StorageAdaptor.fs.node.ts"
     }

@@ -1,12 +1,14 @@
 import { StorageAdaptor } from "./StorageAdaptor";
 import { TimeHelper } from "#TimeHelper";
-import { CryptolaliaConfig } from "./Cryptolalia";
+import { CryptolaliaConfig } from "./CryptolaliaConfig";
+import { Injectable } from "@bfchain/util";
 
 /**
  * 数据列表
  * 根据自己接收到的数据来打上唯一的接收时间戳，并按接收时间归档
  */
 
+@Injectable()
 export class CryptolaliaDataList<D> {
   constructor(
     private config: CryptolaliaConfig,

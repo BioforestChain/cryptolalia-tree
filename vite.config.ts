@@ -75,7 +75,11 @@ export default defineConfig({
       };
     })(),
     (() => {
-      const packageJson = require("./package.json");
+      const packageFilepath = path.join(
+        fileURLToPath(import.meta.url),
+        "../package.json",
+      );
+      const packageJson = JSON.parse(fs.readFileSync(packageFilepath, "utf-8"));
       const subpathImports = packageJson.imports || {};
       // console.log(subpathImports);
       return {

@@ -1,5 +1,7 @@
-import { CryptolaliaConfig } from "./Cryptolalia";
-import { AnyBlob, Paths, StorageAdaptor } from "./StorageAdaptor";
+import { Injectable } from "@bfchain/util";
+import { CryptoHelper } from "./CryptoHelper";
+import { CryptolaliaConfig } from "./CryptolaliaConfig";
+import { Paths, StorageAdaptor } from "./StorageAdaptor";
 import { TimeHelper } from "./TimeHelper";
 
 /**
@@ -7,6 +9,7 @@ import { TimeHelper } from "./TimeHelper";
  * 用来根据发送者的发送时间来管理接收的数据
  * 这种结构在不同节点之间可以进行信息同步
  */
+@Injectable()
 export class CryptolaliaTimelineTree {
   constructor(
     private config: CryptolaliaConfig,
@@ -195,15 +198,6 @@ export class CryptolaliaTimelineTree {
 interface TimelineLeafModal {
   leafTime: number;
   content: Uint8Array;
-}
-
-abstract class CryptoHelper {
-  abstract sha256Blob(blob: AnyBlob): Promise<Uint8Array>;
-  abstract sha256HashBuilder(): HashBuilder;
-}
-abstract class HashBuilder {
-  abstract update(binary: Uint8Array): this;
-  abstract digest(): Promise<Uint8Array>;
 }
 
 const EMPTY_SHA256 = new Uint8Array(32);
