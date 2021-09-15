@@ -3,7 +3,7 @@ import { CryptolaliaAssets } from "./CryptolaliaAssets";
 import { CryptolaliaDataList } from "./CryptolaliaDataList";
 import { StorageAdaptor } from "./StorageAdaptor";
 import { TimeHelper } from "./TimeHelper";
-import { CryptolaliaTimelineTree } from "./index";
+import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 
 @Resolvable()

@@ -33,8 +33,11 @@ export class CryptolaliaAssets {
     this.storage.setBinary(["assets", "code"], document);
   }
   /// File
-  addFile(file: Blob) {
-    this.storage.setBlob(["assets", file.type], file);
+  async addFile(file: Blob) {
+    this.storage.setBinary(
+      ["assets", file.type],
+      new Uint8Array(await file.arrayBuffer()),
+    );
   }
 }
 

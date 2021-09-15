@@ -87,6 +87,7 @@
     "./src/lib/TimeHelper.web.ts",
     "./src/test/test.ts",
     "./src/core/CryptolaliaConfig.ts",
-    "./src/core/CryptoHelper.ts"
+    "./src/core/CryptoHelper.ts",
+    "./src/core/CryptolaliaTimelineTree.ts"
   ]
 }

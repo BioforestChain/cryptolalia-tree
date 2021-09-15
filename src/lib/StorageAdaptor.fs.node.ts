@@ -2,6 +2,7 @@ import { Paths, StorageAdaptor } from "../core/StorageAdaptor";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { deserialize, serialize } from "node:v8";
 import { Blob, Buffer } from "node:buffer";
 import { Inject } from "@bfchain/util";
 
@@ -43,14 +44,14 @@ class NodeFilesystemsStorageAdaptor extends StorageAdaptor {
       return new Blob([binary]);
     }
   }
-  async getJson<T>(paths: Paths): Promise<T | undefined> {
+  async getJsObject<T>(paths: Paths): Promise<T | undefined> {
     const binary = await this.getBinary(paths);
     if (binary) {
-      return JSON.parse(binary.toString());
+      return deserialize(binary);
     }
   }
-  setJson<T>(paths: Paths, data: T): Promise<void> {
-    return this.setBinary(paths, Buffer.from(JSON.stringify(data)));
+  setJsObject<T>(paths: Paths, data: T): Promise<void> {
+    return this.setBinary(paths, serialize(data));
   }
   async has(paths: Paths): Promise<boolean> {
     const filepath = this.getFilepath(paths);

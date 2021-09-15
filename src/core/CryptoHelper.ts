@@ -1,9 +1,10 @@
 import { Injectable } from "@bfchain/util-dep-inject";
-import { AnyBlob } from "./StorageAdaptor";
+// import { AnyBlob } from "./StorageAdaptor";
 
 @Injectable()
 export abstract class CryptoHelper {
-  abstract sha256Blob(blob: AnyBlob): Promise<Uint8Array>;
+  // abstract sha256Blob(blob: AnyBlob): Promise<Uint8Array>;
+  abstract sha256Binary(blob: Uint8Array): Promise<Uint8Array>;
   abstract sha256HashBuilder(): HashBuilder;
 }
 export abstract class HashBuilder {

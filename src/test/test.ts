@@ -18,7 +18,7 @@ const moduleMap = new ModuleStroge();
       new ModuleStroge([
         [
           FilesystemsStorageAdaptor.ARGS.TARGET_DIR,
-          path.join(process.cwd(), "../.cache/fs"),
+          path.join(process.cwd(), "./.cache/fs"),
         ],
       ]),
     ),
@@ -37,7 +37,11 @@ const moduleMap = new ModuleStroge();
 }
 
 const cryptolalia = Resolve(Cryptolalia, moduleMap);
-
-console.log(cryptolalia.config);
-
-cryptolalia.timelineTree.addLeaf(Buffer.from("hi"), Date.now());
+(async () => {
+  console.log(cryptolalia.config);
+  await cryptolalia.timelineTree.addLeaf(
+    new Uint8Array(Buffer.from("hi")),
+    Date.now(),
+  );
+  console.log(await cryptolalia.timelineTree.getBranchRoute(Date.now()));
+})();
