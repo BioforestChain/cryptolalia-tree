@@ -15,7 +15,7 @@ export default defineConfig({
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: [/^@bfchain\/.*/, /^node:.*/, "tslib"],
+      external: [/^@bfchain\/.*/, /^node:.*/, "tslib", "js-yaml"],
     },
   },
   plugins: [

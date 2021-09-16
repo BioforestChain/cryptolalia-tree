@@ -2,18 +2,56 @@ import { Paths, StorageAdaptor } from "../core/StorageAdaptor";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { deserialize, serialize } from "node:v8";
+// import { deserialize, serialize } from "node:v8";
 import { Blob, Buffer } from "node:buffer";
 import { Inject } from "@bfchain/util";
+import yaml, { Type } from "js-yaml";
+
+const schema = yaml.DEFAULT_SCHEMA.extend([
+  new Type("tag:bfchain.org,2021:js/map", {
+    kind: "sequence",
+    resolve(data) {
+      if (data === null) return true;
+      return data.length % 2 === 0;
+    },
+    construct(data) {
+      const result = new Map();
+      for (let i = 0; i < data.length; i += 2) {
+        result.set(data[i], data[i + 1]);
+      }
+
+      return result;
+    },
+    represent(data) {
+      if (!(data instanceof Map)) {
+        throw new TypeError("no an map");
+      }
+      const result = new Array(data.size * 2);
+      let i = 0;
+      for (const item of data) {
+        result[i++] = item[0];
+        result[i++] = item[1];
+      }
+
+      return result;
+    },
+    predicate(data) {
+      return data instanceof Map;
+    },
+  }),
+]);
+const deserialize = (binary: Uint8Array) =>
+  yaml.load(binary.toString(), { schema }) as any;
+const serialize = (obj: any) => Buffer.from(yaml.dump(obj, { schema }));
 
 const ARGS = {
   TARGET_DIR: Symbol("targetDir"),
 };
-class NodeFilesystemsStorageAdaptor extends StorageAdaptor {
+class NodeFilesystemsStorage extends StorageAdaptor {
   static readonly ARGS = ARGS;
   constructor(
     @Inject(ARGS.TARGET_DIR, { optional: true })
-    private targetDir: string = process.cwd(),
+    private targetDir: string = process.cwd() + "/.cache/fs",
   ) {
     super();
     if (!existsSync(targetDir)) {
@@ -86,4 +124,4 @@ class NodeFilesystemsStorageAdaptor extends StorageAdaptor {
   }
 }
 
-export { NodeFilesystemsStorageAdaptor as FilesystemsStorageAdaptor };
+export { NodeFilesystemsStorage as FilesystemsStorage };

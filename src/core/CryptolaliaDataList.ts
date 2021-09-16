@@ -55,8 +55,9 @@ class BranchHanlder {
     let cache = this._cache.get(branchId);
     const now = this.timeHelper.now();
     if (cache) {
-      cache.lastUpdateTime = now;
       this._cache.delete(branchId); // 删掉在重新写入，是为了进入到队列的莫欸
+      cache.lastUpdateTime = now;
+      cache.dataList = dataList;
     } else {
       cache = { dataList, lastUpdateTime: now };
     }
@@ -141,7 +142,6 @@ class BranchHanlder {
 
   async *BranchIdWalker(startBranchId: number, order = ORDER.UP) {
     const startGroupId = this.config.calcNextBranchId(startBranchId);
-    const startGroupRange = this.config.calcBranchIdRange(startGroupId);
     let metaGroup: BranchMetaGroup | undefined;
     // 如果可以，先在同组里头查找，注意，这里可能因为startBranchId本身就是临界值，所以可能找空。但我们可以使用next/pre的指针来进行索引
     metaGroup = await this._getBranchMetaGroup(startGroupId);
@@ -201,28 +201,41 @@ class BranchHanlder {
           `数据库异常，可能是数据丢失，索引断链，需要重新整理数据重建索引(${this.storage.currentPaths}, ${metaGroup.groupId})`,
         );
       }
+      /**
+       * startBranchId: 3
+       * order:  1
+       * branchIdList:  1, 2, 3, 4, 5, 6
+       * compareUp:     1, 1, 0,-1,-1,-1
+       * compareDown:  -1,-1, 0, 1, 1, 1
+       *
+       * order: -1
+       * branchIdList:  6, 5, 4, 3, 2, 1
+       * compareUp:    -1,-1,-1, 0, 1, 1
+       * compareDown:   1, 1, 1, 0,-1,-1
+       */
       let index = branchIdList.findIndex(
-        (branchId) => compareUp(startBranchId, branchId) !== order,
+        (branchId) => compareDown(startBranchId, branchId) === order,
       );
-      if (index === -1) {
-        const lastBranchMeta = metaGroup.map.get(
-          branchIdList[branchIdList.length - 1],
-        )!;
-        const nextBranchId =
-          order === ORDER.UP
-            ? lastBranchMeta.nextBranchId
-            : lastBranchMeta.preBranchId;
-        const nextGroupId = this.config.calcNextBranchId(nextBranchId);
-        /// 下一个groupId与当前的的一样，说明已经遍历到末尾了
-        if (nextGroupId === metaGroup.groupId) {
-          return;
-        }
-        metaGroup = await this._getBranchMetaGroup(nextGroupId);
-      } else {
+
+      if (index !== -1) {
         do {
           yield branchIdList[index];
         } while (++index < branchIdList.length);
       }
+      /// 定位到下一个metaGroup
+      const lastBranchMeta = metaGroup.map.get(
+        branchIdList[branchIdList.length - 1],
+      )!;
+      const nextBranchId =
+        order === ORDER.UP
+          ? lastBranchMeta.nextBranchId
+          : lastBranchMeta.preBranchId;
+      const nextGroupId = this.config.calcNextBranchId(nextBranchId);
+      /// 下一个groupId与当前的的一样，说明已经遍历到末尾了
+      if (nextGroupId === metaGroup.groupId) {
+        return;
+      }
+      metaGroup = await this._getBranchMetaGroup(nextGroupId);
     } while (true);
   }
 }
@@ -386,20 +399,32 @@ export class CryptolaliaDataList<D> {
   /**从某一个时间点开始读取数据 */
   async *ItemReader(timestamp: number, order = ORDER.UP) {
     let branchWalker: AsyncGenerator<number> | undefined;
+    let branchId = this.config.calcBranchId(timestamp);
     do {
-      let branchId = this.config.calcBranchId(timestamp);
-      let dataList = await this._branchHanlder.getDataList(branchId);
+      const dataList = await this._branchHanlder.getDataList(branchId);
 
       let start = 0;
       let end = dataList.length;
       if (dataList.length !== 0) {
         if (order === ORDER.DOWN) {
-          [start, end] = [end, start];
+          start = end - 1;
+          end = -1;
+          // [start, end] = [end, start];
         }
 
         while (start !== end) {
           const item = dataList[start];
-          if (compareUp(item.createTime, timestamp) !== order) {
+          /**
+           * timestamp: 3
+           * order:  1
+           * dataList:  1, 2, 3, 4, 5, 6
+           * compare:   1, 1, 0,-1,-1,-1
+           *
+           * order: -1
+           * dataList:  6, 5, 4, 3, 2, 1
+           * compare:  -1,-1,-1, 0, 1, 1
+           */
+          if (compareUp(timestamp, item.createTime) !== order) {
             yield item;
           }
 
