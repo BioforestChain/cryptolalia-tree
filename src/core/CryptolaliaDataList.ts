@@ -241,7 +241,7 @@ class BranchHanlder {
 }
 type DataItem = {
   createTime: number;
-  data: Uint8Array;
+  data: unknown;
 };
 /**方便定位上一片、下一片数据的位置
  * 因为它本来是一个数组，只是因为分片技术而分成多片
@@ -351,8 +351,8 @@ export class CryptolaliaDataList<D> {
 
   private _perNow = 0;
   /**添加元素 */
-  async addItem(data: Uint8Array) {
-    const now = this.timeHelper.max(this._perNow + 1);
+  async addItem(data: D, time = this.timeHelper.now()) {
+    const now = this.timeHelper.max(this._perNow + 1, time);
     this._perNow = now;
     const branchId = this.config.calcBranchId(now);
 
@@ -365,13 +365,16 @@ export class CryptolaliaDataList<D> {
       data: data,
     });
     await this._branchHanlder.setDataList(branchId, dataList);
+    return time;
   }
   /**同一时间添加多个元素 */
-  async addItems(datas: Iterable<Uint8Array>) {
+  async addItems(datas: Iterable<D>, time = this.timeHelper.now()) {
     let dataList: Array<DataItem> | undefined;
     let perBranchId = 0;
+    const timeList: number[] = [];
     for (const data of datas) {
-      const now = this.timeHelper.max(this._perNow + 1);
+      const now = this.timeHelper.max(this._perNow + 1, time);
+      timeList.push(now);
       this._perNow = now;
       const branchId = this.config.calcBranchId(now);
       if (branchId !== perBranchId) {
@@ -395,6 +398,7 @@ export class CryptolaliaDataList<D> {
     if (dataList) {
       await this._branchHanlder.setDataList(perBranchId, dataList);
     }
+    return timeList;
   }
   /**从某一个时间点开始读取数据 */
   async *ItemReader(timestamp: number, order = ORDER.UP) {
