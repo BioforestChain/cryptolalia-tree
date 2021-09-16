@@ -26,7 +26,7 @@ const moduleMap = new ModuleStroge();
 }
 {
   class MyConfig extends CryptolaliaConfig {
-    branchUnitCount = 64;
+    branchGroupCount = 64;
     timespan = 64e3;
     startTime = +new Date("2021-9-15");
   }

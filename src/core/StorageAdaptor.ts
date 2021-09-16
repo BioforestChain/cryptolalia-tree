@@ -1,6 +1,6 @@
 import { Injectable } from "@bfchain/util";
 
-export type PathSlice = string | number;
+export type PathSlice = string; //| number;
 export type Paths = ReadonlyArray<PathSlice>;
 // export type AnyBlob = Blob | import("node:buffer").Blob;
 

@@ -18,32 +18,9 @@ export class CryptolaliaTimelineTree {
     private cryptoHelper: CryptoHelper,
     private storage: StorageAdaptor,
   ) {}
-  private _calcBranchId(leafTime: number) {
-    const relativeLeafTime = leafTime - this.config.startTime;
-    if (relativeLeafTime < 0) {
-      throw new RangeError("invald time: " + leafTime);
-    }
-    let branchId = relativeLeafTime / this.config.timespan;
-    if (branchId % 1 === 0) {
-      branchId += 1;
-    }
-    return Math.ceil(branchId);
-  }
-  private _calcNextBranchId(branchId: number) {
-    let nextBranchId = branchId / this.config.branchUnitCount;
-    if (nextBranchId % 1 === 0) {
-      nextBranchId += 1;
-    }
-    return Math.ceil(nextBranchId);
-  }
-  private _calcBranchIdRange(highLevelBranchId: number) {
-    const start = (highLevelBranchId - 1) * this.config.branchUnitCount;
-    const end = start + this.config.branchUnitCount - 1;
-    return { start: start, end: end };
-  }
 
   async addLeaf(leaf: Uint8Array, time: number) {
-    const branchIdId = this._calcBranchId(time);
+    const branchIdId = this.config.calcBranchId(time);
 
     const level1Path = ["timeline-tree", `block-${branchIdId}`];
     const json =
@@ -68,7 +45,7 @@ export class CryptolaliaTimelineTree {
       }
       await this.storage.del(paths);
       level += 1;
-      levelBranchId = this._calcNextBranchId(levelBranchId);
+      levelBranchId = this.config.calcNextBranchId(levelBranchId);
     } while (true);
   }
 
@@ -96,7 +73,7 @@ export class CryptolaliaTimelineTree {
       }
     } else {
       /* 找出与branchId子级范围 */
-      const { start, end } = this._calcBranchIdRange(branchId);
+      const { start, end } = this.config.calcBranchIdRange(branchId);
       const hashList: Uint8Array[] = [];
       if (level === 2) {
         const level1Paths = ["timeline-tree", `block-0`];
@@ -151,7 +128,7 @@ export class CryptolaliaTimelineTree {
   /**获取某一个叶子的枝干路径 */
   async getBranchRoute(leafTime: number) {
     let level = 1;
-    let branchId = this._calcBranchId(leafTime);
+    let branchId = this.config.calcBranchId(leafTime);
     const routeHashList = [
       {
         level,
@@ -160,7 +137,7 @@ export class CryptolaliaTimelineTree {
       },
     ];
     while (branchId !== 1) {
-      branchId = this._calcNextBranchId(branchId);
+      branchId = this.config.calcNextBranchId(branchId);
       level += 1;
       routeHashList.push({
         level,
@@ -180,7 +157,7 @@ export class CryptolaliaTimelineTree {
         `invalid branch level: ${level} when get branch(${branchId})`,
       );
     }
-    const { start, end } = this._calcBranchIdRange(branchId);
+    const { start, end } = this.config.calcBranchIdRange(branchId);
     const childLevel = level - 1;
     const childrenHashList: {
       branchId: number;
