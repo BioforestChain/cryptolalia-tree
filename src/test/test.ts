@@ -37,7 +37,7 @@ const moduleMap = new ModuleStroge();
   Resolve(CryptoHelper, moduleMap);
 }
 
-const cryptolalia = Resolve(Cryptolalia, moduleMap);
+const cryptolalia = Resolve<Cryptolalia<string>>(Cryptolalia, moduleMap);
 (async () => {
   console.log(cryptolalia.config);
   console.log(getInjectionToken(FilesystemsStorage));
@@ -51,21 +51,13 @@ const cryptolalia = Resolve(Cryptolalia, moduleMap);
     +new Date(1631798288511.563),
     1,
   )) {
-    console.log(
-      `[${new Date(msg.createTime).toLocaleString()}] ${Buffer.from(
-        msg.data,
-      ).toString()}`,
-    );
+    console.log(`[${new Date(msg.createTime).toLocaleString()}] ${msg.data}`);
   }
   console.log("----");
   for await (const msg of cryptolalia.dataList.ItemReader(
     +new Date(1631798288511.563),
     -1,
   )) {
-    console.log(
-      `[${new Date(msg.createTime).toLocaleString()}] ${Buffer.from(
-        msg.data,
-      ).toString()}`,
-    );
+    console.log(`[${new Date(msg.createTime).toLocaleString()}] ${msg.data}`);
   }
 })().catch(console.error);

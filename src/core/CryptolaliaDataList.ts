@@ -7,7 +7,7 @@ const compareUp = (t1: number, t2: number) => (t1 < t2 ? -1 : t1 > t2 ? 1 : 0);
 const compareDown = (t1: number, t2: number) =>
   t1 < t2 ? 1 : t1 > t2 ? -1 : 0;
 @Injectable()
-class BranchHanlder {
+class BranchHanlder<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
@@ -18,7 +18,7 @@ class BranchHanlder {
     number,
     {
       lastUpdateTime: number;
-      dataList: Array<DataItem> | Promise<Array<DataItem>>;
+      dataList: Array<DataItem<D>> | Promise<Array<DataItem<D>>>;
       writerQueue?: PromiseOut<void>;
     }
   >();
@@ -29,7 +29,7 @@ class BranchHanlder {
       cache = {
         lastUpdateTime: this.timeHelper.now(),
         dataList: this.storage
-          .getJsObject<Array<DataItem>>(paths)
+          .getJsObject<Array<DataItem<D>>>(paths)
           .then((data) => data || []),
       };
       this._cache.set(branchId, cache);
@@ -51,7 +51,7 @@ class BranchHanlder {
     }
     return cache.dataList;
   }
-  setDataList(branchId: number, dataList: Array<DataItem>) {
+  setDataList(branchId: number, dataList: Array<DataItem<D>>) {
     let cache = this._cache.get(branchId);
     const now = this.timeHelper.now();
     if (cache) {
@@ -239,9 +239,9 @@ class BranchHanlder {
     } while (true);
   }
 }
-type DataItem = {
+type DataItem<D> = {
   createTime: number;
-  data: unknown;
+  data: D;
 };
 /**方便定位上一片、下一片数据的位置
  * 因为它本来是一个数组，只是因为分片技术而分成多片
@@ -253,12 +253,12 @@ type BranchMeta = {
 type BranchMetaGroup = { groupId: number; map: Map<number, BranchMeta> };
 
 @Injectable()
-class MetaHanlder {
+class MetaHanlder<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
     private storage: StorageAdaptor,
-    private _branchHanlder: BranchHanlder,
+    private _branchHanlder: BranchHanlder<D>,
   ) {}
   private _meta?: BFChainUtil.PromiseMaybe<Meta>;
   getMeta() {
@@ -323,8 +323,8 @@ export class CryptolaliaDataList<D> {
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
     private storage: StorageAdaptor,
-    private _branchHanlder: BranchHanlder,
-    private _metaHanlder: MetaHanlder,
+    private _branchHanlder: BranchHanlder<D>,
+    private _metaHanlder: MetaHanlder<D>,
   ) {}
 
   /**梳理元数据 */
@@ -369,7 +369,7 @@ export class CryptolaliaDataList<D> {
   }
   /**同一时间添加多个元素 */
   async addItems(datas: Iterable<D>, time = this.timeHelper.now()) {
-    let dataList: Array<DataItem> | undefined;
+    let dataList: Array<DataItem<D>> | undefined;
     let perBranchId = 0;
     const timeList: number[] = [];
     for (const data of datas) {

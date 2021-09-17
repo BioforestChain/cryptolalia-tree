@@ -1,10 +1,11 @@
 import { Resolvable } from "@bfchain/util";
 import { CryptolaliaAssets } from "./CryptolaliaAssets";
+import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { CryptolaliaDataList } from "./CryptolaliaDataList";
+import { CryptolaliaSync } from "./CryptolaliaSync";
+import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { StorageAdaptor } from "./StorageAdaptor";
 import { TimeHelper } from "./TimeHelper";
-import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
-import { CryptolaliaConfig } from "./CryptolaliaConfig";
 
 @Resolvable()
 export default class Cryptolalia<D> {
@@ -14,7 +15,8 @@ export default class Cryptolalia<D> {
     readonly timelineTree: CryptolaliaTimelineTree,
     readonly dataList: CryptolaliaDataList<D>,
     readonly assets: CryptolaliaAssets,
-    private storage: StorageAdaptor,
+    readonly sync: CryptolaliaSync,
+    readonly storage: StorageAdaptor,
   ) {}
   /**
    * 添加数据

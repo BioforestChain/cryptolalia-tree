@@ -98,7 +98,7 @@ class NodeFilesystemsStorage extends StorageAdaptor {
   async del(paths: Paths): Promise<boolean> {
     const filepath = this.getFilepath(paths);
     if (existsSync(filepath)) {
-      fs.rm(filepath, { recursive: true });
+      fs.rm(filepath, { recursive: true, force: true });
       return true;
     }
     return false;
@@ -107,15 +107,17 @@ class NodeFilesystemsStorage extends StorageAdaptor {
     const filepath = this.getFilepath(paths);
     const mul_paths: string[] = [];
     const mul_keys: string[] = [];
-    for (const item of await fs.readdir(filepath)) {
-      try {
-        const stat = await fs.stat(path.join(filepath, item));
-        if (stat.isFile()) {
-          mul_keys.push(item);
-        } else {
-          mul_paths.push(item);
-        }
-      } catch {}
+    if (existsSync(filepath)) {
+      for (const item of await fs.readdir(filepath)) {
+        try {
+          const stat = await fs.stat(path.join(filepath, item));
+          if (stat.isFile()) {
+            mul_keys.push(item);
+          } else {
+            mul_paths.push(item);
+          }
+        } catch {}
+      }
     }
     return { paths: mul_paths, keys: mul_keys };
   }
