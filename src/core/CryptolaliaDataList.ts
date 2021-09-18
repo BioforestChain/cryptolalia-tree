@@ -18,7 +18,9 @@ class BranchHanlder<D> {
     number,
     {
       lastUpdateTime: number;
-      dataList: Array<DataItem<D>> | Promise<Array<DataItem<D>>>;
+      dataList:
+        | Array<CryptolaliaDataList.DataItem<D>>
+        | Promise<Array<CryptolaliaDataList.DataItem<D>>>;
       writerQueue?: PromiseOut<void>;
     }
   >();
@@ -29,7 +31,7 @@ class BranchHanlder<D> {
       cache = {
         lastUpdateTime: this.timeHelper.now(),
         dataList: this.storage
-          .getJsObject<Array<DataItem<D>>>(paths)
+          .getJsObject<Array<CryptolaliaDataList.DataItem<D>>>(paths)
           .then((data) => data || []),
       };
       this._cache.set(branchId, cache);
@@ -51,7 +53,10 @@ class BranchHanlder<D> {
     }
     return cache.dataList;
   }
-  setDataList(branchId: number, dataList: Array<DataItem<D>>) {
+  setDataList(
+    branchId: number,
+    dataList: Array<CryptolaliaDataList.DataItem<D>>,
+  ) {
     let cache = this._cache.get(branchId);
     const now = this.timeHelper.now();
     if (cache) {
@@ -239,10 +244,13 @@ class BranchHanlder<D> {
     } while (true);
   }
 }
-type DataItem<D> = {
-  createTime: number;
-  data: D;
-};
+
+export declare namespace CryptolaliaDataList {
+  type DataItem<D> = {
+    createTime: number;
+    data: D;
+  };
+}
 /**方便定位上一片、下一片数据的位置
  * 因为它本来是一个数组，只是因为分片技术而分成多片
  */
@@ -369,7 +377,7 @@ export class CryptolaliaDataList<D> {
   }
   /**同一时间添加多个元素 */
   async addItems(datas: Iterable<D>, time = this.timeHelper.now()) {
-    let dataList: Array<DataItem<D>> | undefined;
+    let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
     let perBranchId = 0;
     const timeList: number[] = [];
     for (const data of datas) {

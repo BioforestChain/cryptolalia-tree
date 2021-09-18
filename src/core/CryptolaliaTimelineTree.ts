@@ -13,7 +13,7 @@ import { TimeHelper } from "./TimeHelper";
  */
 
 @Injectable()
-export class CryptolaliaTimelineTree {
+export class CryptolaliaTimelineTree<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
@@ -21,12 +21,14 @@ export class CryptolaliaTimelineTree {
     private storage: StorageAdaptor,
   ) {}
 
-  async addLeaf(leaf: Uint8Array, time: number) {
-    const branchIdId = this.config.calcBranchId(time);
+  async addLeaf(leaf: D, time: number) {
+    const branchId = this.config.calcBranchId(time);
 
-    const level1Path = ["timeline-tree", `block-${branchIdId}`];
+    const level1Path = ["timeline-tree", `block-${branchId}`];
     const json =
-      (await this.storage.getJsObject<TimelineLeafModal[]>(level1Path)) || [];
+      (await this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
+        level1Path,
+      )) || [];
     json.push({
       leafTime: time,
       content: leaf,
@@ -35,7 +37,7 @@ export class CryptolaliaTimelineTree {
 
     /// 逐级删除tree的hash记录
     let level = 1;
-    let levelBranchId = branchIdId;
+    let levelBranchId = branchId;
     do {
       const paths = [
         "timeline-tree-hash",
@@ -49,15 +51,18 @@ export class CryptolaliaTimelineTree {
       level += 1;
       levelBranchId = this.config.calcNextBranchId(levelBranchId);
     } while (true);
+
+    return { branchId };
+  }
+  async getBranchData(branchId: number) {
+    const level1Path = ["timeline-tree", `block-${branchId}`];
+    return (
+      this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
+        level1Path,
+      ) || []
+    );
   }
 
-  private _readBranchHash(
-    branchId: number,
-    level: number,
-    paths: Paths /*  =  ["timeline-tree-hash", `level-${level}`,`branch-${branchId}`] */,
-  ) {
-    return this.storage.getBinary(paths);
-  }
   private async _calcBranchHash(
     branchId: number,
     level: number,
@@ -123,7 +128,7 @@ export class CryptolaliaTimelineTree {
       `branch-${branchId}`,
     ];
     return (
-      (await this._readBranchHash(branchId, level, paths)) ||
+      (await this.storage.getBinary(paths)) ||
       (await this._calcBranchHash(branchId, level, paths))
     );
   }
@@ -179,8 +184,12 @@ export class CryptolaliaTimelineTree {
     };
   }
 }
-interface TimelineLeafModal {
-  leafTime: number;
-  content: Uint8Array;
+
+export declare namespace CryptolaliaTimelineTree {
+  interface LeafModal<D> {
+    leafTime: number;
+    content: D;
+  }
+  type BranchData<D> = LeafModal<D>[];
 }
 const EMPTY_SHA256 = new Uint8Array(0);
