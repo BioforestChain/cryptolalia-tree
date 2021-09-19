@@ -57,8 +57,8 @@ export default defineConfig({
                 /`(?:\.|(\\\`)|[^\``])*`|"(?:\.|(\\\")|[^\""\n])*"|'(?:\.|(\\\')|[^\''\n])*'/g,
                 "",
               )
-              .replace(/\/\/[\w\W]*\n/g, "")
-              .replace(/\/\*[\w\W]*\*\//g, "")
+              .replace(/\/\/[\w\W]*?\n/g, "")
+              .replace(/\/\*[\w\W]*?\*\//g, "")
               .includes("@");
             if (!hasDecorator) {
               return null;
@@ -66,6 +66,7 @@ export default defineConfig({
 
             console.log("need emitDecoratorMetadata", source);
             const program = typescript.transpileModule(ts, parsedTsConfig);
+            // console.log(program.outputText);
             return program.outputText;
           } catch (err) {
             printDiagnostics({ file: source, err });
