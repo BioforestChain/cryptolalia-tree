@@ -59,12 +59,14 @@ export class CryptolaliaTimelineTree<D> {
         info.paths,
       );
       if (branchHashInfo !== undefined) {
-        branchHashInfo.dirty.add(info.dirtyBranchId);
+        branchHashInfo.dirty = true;
+        branchHashInfo.subDirty.add(info.dirtyBranchId);
         branchHashInfo.subHash.delete(info.dirtyBranchId);
       } else {
         branchHashInfo = {
           hash: EMPTY_SHA256,
-          dirty: new Set([info.dirtyBranchId]),
+          dirty: true,
+          subDirty: new Set([info.dirtyBranchId]),
           subHash: new Map(),
         };
       }
@@ -97,6 +99,17 @@ export class CryptolaliaTimelineTree<D> {
     );
   }
 
+  private async _getBlockHash(branchId: number) {
+    const binary = await this.storage.getBinary([
+      "timeline-blocks",
+      `block-${branchId}`,
+    ]);
+    if (binary) {
+      return await this.cryptoHelper.sha256Binary(binary);
+    }
+    return EMPTY_SHA256;
+  }
+
   /**获取某一个枝干的hash值
    * 优先读取缓存,没有缓存的话进行动态计算,计算完后写入缓存
    */
@@ -117,23 +130,20 @@ export class CryptolaliaTimelineTree<D> {
       }
       /// 读取到缓存
       const cacheHash =
-        parentBranchHashInfo.dirty.has(branchId) ||
+        parentBranchHashInfo.subDirty.has(branchId) ||
         parentBranchHashInfo.subHash.get(branchId);
       let hash = EMPTY_SHA256;
       /// 发现了变动，计算hash并写入缓存
       if (cacheHash === true) {
-        /// 读取数据进行计算
-        const binary = await this.storage.getBinary([
-          "timeline-tree",
-          `block-${branchId}`,
-        ]);
-        if (binary) {
-          hash = await this.cryptoHelper.sha256Binary(binary);
-          parentBranchHashInfo.subHash.set(branchId, hash);
-        } else {
+        hash = await this._getBlockHash(branchId);
+        if (hash.length === 0 /* EMPTY_SHA256 */) {
           parentBranchHashInfo.subHash.delete(branchId);
+        } else {
+          parentBranchHashInfo.subHash.set(branchId, hash);
         }
-        parentBranchHashInfo.dirty.delete(branchId);
+        parentBranchHashInfo.subDirty.delete(branchId);
+
+        // console.log(parentBranchHashInfo, hash);
         await this.storage.setJsObject<BranchHashInfo>(
           parentPaths,
           parentBranchHashInfo,
@@ -156,50 +166,58 @@ export class CryptolaliaTimelineTree<D> {
     if (branchHashInfo === undefined) {
       return EMPTY_SHA256;
     }
-    if (branchHashInfo.dirty.size === 0) {
+    if (branchHashInfo.dirty === false) {
       return branchHashInfo.hash;
     }
 
     /// 处理脏枝干
-    const childLevel = level - 1;
-    if (childLevel === 0) {
-      /// 对0进行加速
-      for (const dirtyBranchId of branchHashInfo.dirty) {
-        const binary = await this.storage.getBinary([
-          "timeline-tree",
-          `block-${dirtyBranchId}`,
-        ]);
-        if (binary) {
-          branchHashInfo.subHash.set(
-            branchId,
-            await this.cryptoHelper.sha256Binary(binary),
-          );
-        } else {
-          branchHashInfo.subHash.delete(branchId);
+    if (branchHashInfo.subDirty.size !== 0) {
+      const childLevel = level - 1;
+      if (childLevel === 0) {
+        /// 对0进行加速
+        for (const dirtyBranchId of branchHashInfo.subDirty) {
+          const blockHash = await this._getBlockHash(dirtyBranchId);
+          if (blockHash.length === 0 /* EMPTY_SHA256 */) {
+            branchHashInfo.subHash.delete(branchId);
+          } else {
+            branchHashInfo.subHash.set(branchId, blockHash);
+          }
+        }
+      } else {
+        for (const dirtyBranchId of branchHashInfo.subDirty) {
+          const hash = await this._getBranchHash(dirtyBranchId, childLevel);
+          if (hash.length === 0 /* EMPTY_SHA256 */) {
+            branchHashInfo.subHash.delete(branchId);
+          } else {
+            branchHashInfo.subHash.set(branchId, hash);
+          }
         }
       }
-    } else {
-      for (const dirtyBranchId of branchHashInfo.dirty) {
-        const hash = await this._getBranchHash(dirtyBranchId, childLevel);
-        if (hash.length === 0 /* EMPTY_SHA256 */) {
-          branchHashInfo.subHash.delete(branchId);
-        } else {
-          branchHashInfo.subHash.set(branchId, hash);
-        }
-      }
+      // 清除脏信息
+      branchHashInfo.subDirty.clear();
     }
-    // 清除脏信息
-    branchHashInfo.dirty.clear();
     /// 重新进行hash计算
-    const hashBuilder = this.cryptoHelper.sha256HashBuilder();
-    for (const childHash of [...branchHashInfo.subHash].sort(
+    const sortSubHashList = [...branchHashInfo.subHash].sort(
       (a, b) => a[0] - b[0],
-    )) {
-      hashBuilder.update(childHash[1]);
+    );
+    switch (sortSubHashList.length) {
+      case 0:
+        branchHashInfo.hash = EMPTY_SHA256;
+        break;
+      case 1:
+        branchHashInfo.hash = sortSubHashList[0][1];
+        break;
+      default:
+        const hashBuilder = this.cryptoHelper.sha256HashBuilder();
+        for (const childHash of sortSubHashList) {
+          hashBuilder.update(childHash[1]);
+        }
+        branchHashInfo.hash = await hashBuilder.digest();
     }
-    branchHashInfo.hash = await hashBuilder.digest();
-
+    branchHashInfo.dirty = false;
+    // 保存新的计算结果
     await this.storage.setJsObject<BranchHashInfo>(paths, branchHashInfo);
+
     return branchHashInfo.hash;
   }
   /**获取某一个叶子的枝干路径 */
@@ -266,6 +284,7 @@ const EMPTY_SHA256 = new Uint8Array(0);
 
 type BranchHashInfo = {
   hash: Uint8Array;
-  dirty: Set<number>;
+  dirty: boolean;
+  subDirty: Set<number>;
   subHash: Map<number, Uint8Array>;
 };
