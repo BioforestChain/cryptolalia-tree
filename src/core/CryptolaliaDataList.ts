@@ -247,7 +247,7 @@ class BranchHanlder<D> {
 
 export declare namespace CryptolaliaDataList {
   type DataItem<D> = {
-    createTime: number;
+    insertTime: number;
     data: D;
   };
 }
@@ -369,7 +369,7 @@ export class CryptolaliaDataList<D> {
 
     const dataList = await this._branchHanlder.getDataList(branchId);
     dataList.push({
-      createTime: now,
+      insertTime: now,
       data: data,
     });
     await this._branchHanlder.setDataList(branchId, dataList);
@@ -398,7 +398,7 @@ export class CryptolaliaDataList<D> {
         dataList = await this._branchHanlder.getDataList(branchId);
       }
       dataList.push({
-        createTime: now,
+        insertTime: now,
         data: data,
       });
     }
@@ -436,7 +436,7 @@ export class CryptolaliaDataList<D> {
            * dataList:  6, 5, 4, 3, 2, 1
            * compare:  -1,-1,-1, 0, 1, 1
            */
-          if (compareUp(timestamp, item.createTime) !== order) {
+          if (compareUp(timestamp, item.insertTime) !== order) {
             yield item;
           }
 

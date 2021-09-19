@@ -80,15 +80,16 @@ export default class Cryptolalia<D> {
       if (branchData === undefined) {
         throw new Error("数据发生了残缺丢失的问题，需要对数据重建索引");
       }
-      const msgContent = branchData.find((item) =>
-        this.msgHelper.equalSignature(item.content, rawData.data.sign),
+      const msgContent = this.timelineTree.getLeafFromBranchData(
+        branchData,
+        rawData.data.sign,
       );
       if (msgContent === undefined) {
         throw new Error("数据发生了残缺丢失的问题，可能需要同步数据");
       }
       msgList.push({
-        receiptTime: rawData.createTime,
-        content: msgContent.content,
+        receiptTime: rawData.insertTime,
+        content: msgContent,
       });
     }
 

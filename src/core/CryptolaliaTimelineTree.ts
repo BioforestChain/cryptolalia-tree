@@ -141,6 +141,17 @@ export class CryptolaliaTimelineTree<D> {
     return { branchId };
   }
 
+  getLeafFromBranchData(
+    branchData: CryptolaliaTimelineTree.BranchData<D>,
+    sign: Uint8Array,
+  ) {
+    const indexe = getIndexe(sign, branchData.indexedDigit);
+    const leaf = branchData.mapData.get(indexe);
+    if (leaf && this.messageHelper.equalSignature(leaf, sign)) {
+      return leaf;
+    }
+  }
+
   async getBranchData(branchId: number) {
     const level1Path = ["timeline-blocks", `block-${branchId}`];
     return (
