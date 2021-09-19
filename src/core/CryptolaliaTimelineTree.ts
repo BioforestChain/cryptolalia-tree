@@ -1,8 +1,8 @@
 import { Injectable } from "@bfchain/util";
 import { CryptoHelper } from "./CryptoHelper";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
+import { MessageHelper } from "./MessageHelper";
 import { Storage } from "./Storage";
-import { TimeHelper } from "./TimeHelper";
 
 /**
  * 树状的时间线
@@ -16,19 +16,75 @@ import { TimeHelper } from "./TimeHelper";
 export class CryptolaliaTimelineTree<D> {
   constructor(
     private config: CryptolaliaConfig,
-    private timeHelper: TimeHelper,
     private cryptoHelper: CryptoHelper,
     private storage: Storage,
+    private messageHelper: MessageHelper<D>,
   ) {}
 
-  async addLeaf(leaf: D, time: number) {
-    const branchId = this.config.calcBranchId(time);
+  async addLeaf(leaf: D) {
+    const { messageHelper } = this;
+    const createTime = messageHelper.getCreateTime(leaf);
+    const branchId = this.config.calcBranchId(createTime);
 
     /**
      * 整个过程是需要时间的，在没有事务安全的情况下
+     * 0. 先判断数据是否已经存在
      * 1. 先进行逐级（从高level到低level）标记branchHash为dirty
      * 2. 将数据正式写入到最底层的branch里头
      */
+
+    //#region Step 0 判断数据是否存在，并顺便构建 Step 2所需要存储的数据(这里可以做一个并发合并作业)
+    const level0Path = ["timeline-blocks", `block-${branchId}`];
+    const branchData: CryptolaliaTimelineTree.BranchData<D> =
+      (await this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
+        level0Path,
+      )) || {
+        indexedDigit: 8,
+        mapData: new Map(),
+      };
+    const sign = messageHelper.getSignature(leaf);
+
+    /// 将数据写入到索引表中
+    do {
+      /// 尝试写入索引
+      const indexe = getIndexe(sign, branchData.indexedDigit);
+
+      /**是否发生索引冲突，需要重建索引 */
+      let reIndexes = false;
+      const oldLeaf = branchData.mapData.get(indexe);
+      // 不存在数据，可以直接写入
+      if (oldLeaf === undefined) {
+        branchData.mapData.set(indexe, leaf);
+      }
+      // 已经存在数据
+      else if (messageHelper.equalSignature(oldLeaf, sign)) {
+        return false;
+      }
+      // 发生冲突，需要重构索引
+      else {
+        if (branchData.indexedDigit === 256) {
+          console.error("signature should be equal", sign, oldLeaf);
+          throw new Error(`out of indexedDigit`);
+        }
+        reIndexes = true;
+      }
+
+      /// 重构索引
+      const indexedDigit = (branchData.indexedDigit = (branchData.indexedDigit *
+        2) as IndexedDigit);
+
+      const newMapData = new Map() as typeof branchData.mapData;
+      for (const data of branchData.mapData.values()) {
+        newMapData.set(
+          getIndexe(messageHelper.getSignature(data), indexedDigit),
+          data,
+        );
+      }
+      branchData.mapData = newMapData;
+    } while (branchData.indexedDigit <= 256);
+
+    //#endregion
+
     //#region Step 1.
 
     let curlevel = 0;
@@ -59,6 +115,10 @@ export class CryptolaliaTimelineTree<D> {
         info.paths,
       );
       if (branchHashInfo !== undefined) {
+        /// 这个脏变动已经存在了，可以直接跳过
+        if (branchHashInfo.subDirty.has(info.dirtyBranchId)) {
+          continue;
+        }
         branchHashInfo.dirty = true;
         branchHashInfo.subDirty.add(info.dirtyBranchId);
         branchHashInfo.subHash.delete(info.dirtyBranchId);
@@ -74,22 +134,13 @@ export class CryptolaliaTimelineTree<D> {
     }
     //#endregion
 
-    //#region Step 2
-    const level0Path = ["timeline-blocks", `block-${branchId}`];
-    const json =
-      (await this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
-        level0Path,
-      )) || [];
-    json.push({
-      leafTime: time,
-      content: leaf,
-    });
-    json.sort((a, b) => a.leafTime - b.leafTime);
-    this.storage.setJsObject(level0Path, json);
+    //#region Step 2 进行最后的数据写入
+    await this.storage.setJsObject(level0Path, branchData);
     //#endregion
 
     return { branchId };
   }
+
   async getBranchData(branchId: number) {
     const level1Path = ["timeline-blocks", `block-${branchId}`];
     return (
@@ -273,12 +324,57 @@ export class CryptolaliaTimelineTree<D> {
   }
 }
 
-export declare namespace CryptolaliaTimelineTree {
-  interface LeafModal<D> {
-    leafTime: number;
-    content: D;
+const getLowIndexe = (
+  sign: Uint8Array,
+  indexedDigit: IndexedDigit.Low,
+): number => {
+  switch (indexedDigit) {
+    case 8:
+      return sign[0] || 0;
+    case 16: // Big endian
+      return ((sign[0] || 0) << 8) + (sign[1] || 0);
+    case 32:
+      return (getLowIndexe(sign, 16) << 16) + getLowIndexe(sign.slice(16), 16);
   }
-  type BranchData<D> = LeafModal<D>[];
+};
+const getHighIndexe = (
+  sign: Uint8Array,
+  indexedDigit: IndexedDigit.High,
+): bigint => {
+  switch (indexedDigit) {
+    case 64:
+      return (
+        (BigInt(getLowIndexe(sign, 32)) << 32n) +
+        BigInt(getLowIndexe(sign.slice(32), 32))
+      );
+    case 128:
+      return (
+        (BigInt(getHighIndexe(sign, 64)) << 64n) +
+        BigInt(getHighIndexe(sign.slice(64), 64))
+      );
+    case 256:
+      return (
+        (BigInt(getHighIndexe(sign, 128)) << 128n) +
+        BigInt(getHighIndexe(sign.slice(128), 128))
+      );
+  }
+};
+
+const getIndexe = (
+  sign: Uint8Array,
+  indexedDigit: IndexedDigit,
+): number | bigint => {
+  if (indexedDigit <= 32) {
+    return getLowIndexe(sign, indexedDigit as IndexedDigit.Low);
+  }
+  return getHighIndexe(sign, indexedDigit as IndexedDigit.High);
+};
+
+export declare namespace CryptolaliaTimelineTree {
+  type BranchData<D> = {
+    indexedDigit: IndexedDigit;
+    mapData: Map<bigint | number, D>;
+  };
 }
 const EMPTY_SHA256 = new Uint8Array(0);
 
@@ -288,3 +384,9 @@ type BranchHashInfo = {
   subDirty: Set<number>;
   subHash: Map<number, Uint8Array>;
 };
+
+type IndexedDigit = IndexedDigit.Low | IndexedDigit.High;
+declare namespace IndexedDigit {
+  type Low = 8 | 16 | 32;
+  type High = 64 | 128 | 256;
+}

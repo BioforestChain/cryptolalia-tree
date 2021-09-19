@@ -88,6 +88,7 @@
     "./src/test/test.ts",
     "./src/core/CryptolaliaConfig.ts",
     "./src/core/CryptoHelper.ts",
-    "./src/core/CryptolaliaTimelineTree.ts"
+    "./src/core/CryptolaliaTimelineTree.ts",
+    "./src/core/MessageHelper.ts"
   ]
 }

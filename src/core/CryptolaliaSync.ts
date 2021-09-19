@@ -153,7 +153,6 @@ export class CryptolaliaSync<D = unknown> {
   }
   async doSync() {
     const now = this.timeHelper.now();
-    debugger;
     const localeBranchRoute = await this.timelineTree.getBranchRoute(now);
     console.log("localeBranchRoute", localeBranchRoute);
 
@@ -163,6 +162,11 @@ export class CryptolaliaSync<D = unknown> {
     });
 
     console.log("remoteBranchRoute", remoteBranchRoute);
+
+    /// 对比两端的BranchRoute，从low-level到high-level进行同步
+    for(let i = 0;i<localeBranchRoute.length;i++){
+        
+    }
   }
 }
 

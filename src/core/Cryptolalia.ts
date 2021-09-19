@@ -4,34 +4,9 @@ import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { CryptolaliaDataList, ORDER } from "./CryptolaliaDataList";
 import { CryptolaliaSync } from "./CryptolaliaSync";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
+import { MessageHelper } from "./MessageHelper";
 import { Storage } from "./Storage";
 import { TimeHelper } from "./TimeHelper";
-
-@Injectable()
-/**
- * 提供对泛型数据统一的信息读取解析的工具函数
- */
-export abstract class MessageHelper<D> {
-  /**获取消息的签名 */
-  abstract getSignature(msg: D): Uint8Array;
-  /**获取消息的时间 */
-  abstract getCreateTime(msg: D): number;
-  /**判断消息与指定签名是否匹配
-   * 这里只提供最基础的纯JS实现，不同平台或者具体情况应当可以提供更进一步的实现
-   */
-  equalSignature(msg: D, expectSign: Uint8Array) {
-    const msgSign = this.getSignature(msg);
-    if (msgSign.length !== expectSign.length) {
-      return false;
-    }
-    for (let i = 0; i < msgSign.length; ++i) {
-      if (expectSign[i] !== msgSign[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-}
 
 @Injectable()
 export default class Cryptolalia<D> {
@@ -50,14 +25,16 @@ export default class Cryptolalia<D> {
    * @param msg 消息内容
    */
   async addMsg(msg: D) {
-    const { branchId } = await this.timelineTree.addLeaf(
-      msg,
-      this.msgHelper.getCreateTime(msg),
-    );
-    await this.dataList.addItem({
-      sign: this.msgHelper.getSignature(msg),
-      branchId,
-    });
+    const success = await this.timelineTree.addLeaf(msg);
+    if (success !== false) {
+      const { branchId } = success;
+      await this.dataList.addItem({
+        sign: this.msgHelper.getSignature(msg),
+        branchId,
+      });
+      return true;
+    }
+    return false;
   }
   async getMsgList(
     timestamp: number,
