@@ -1,5 +1,5 @@
 import { Injectable } from "@bfchain/util-dep-inject";
-// import { AnyBlob } from "./StorageAdaptor";
+// import { AnyBlob } from "./Storage";
 
 @Injectable()
 export abstract class CryptoHelper {

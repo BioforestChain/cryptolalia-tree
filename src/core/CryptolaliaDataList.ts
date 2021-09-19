@@ -1,4 +1,4 @@
-import { StorageAdaptor } from "./StorageAdaptor";
+import { Storage } from "./Storage";
 import { TimeHelper } from "#TimeHelper";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { Injectable, PromiseOut } from "@bfchain/util";
@@ -11,7 +11,7 @@ class BranchHanlder<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
-    private storage: StorageAdaptor,
+    private storage: Storage,
   ) {}
 
   private _cache = new Map<
@@ -153,7 +153,7 @@ class BranchHanlder<D> {
 
     /// 找不到，进度暴力遍历模式，列出所有的组
     if (metaGroup === undefined) {
-      const { keys } = await this.storage.listPaths([
+      const { files: keys } = await this.storage.listPaths([
         "data-list",
         "meta-branch",
       ]);
@@ -265,7 +265,7 @@ class MetaHanlder<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
-    private storage: StorageAdaptor,
+    private storage: Storage,
     private _branchHanlder: BranchHanlder<D>,
   ) {}
   private _meta?: BFChainUtil.PromiseMaybe<Meta>;
@@ -330,7 +330,7 @@ export class CryptolaliaDataList<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
-    private storage: StorageAdaptor,
+    private storage: Storage,
     private _branchHanlder: BranchHanlder<D>,
     private _metaHanlder: MetaHanlder<D>,
   ) {}

@@ -64,7 +64,7 @@ export default defineConfig({
               return null;
             }
 
-            console.log("need emitDecoratorMetadata", source);
+            // console.log("need emitDecoratorMetadata", source);
             const program = typescript.transpileModule(ts, parsedTsConfig);
             // console.log(program.outputText);
             return program.outputText;

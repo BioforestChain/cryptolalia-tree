@@ -19,8 +19,8 @@
     "#CryptoHelper": {
       "node": "./src/lib/CryptoHelper.node.ts"
     },
-    "#StorageAdaptor.fs": {
-      "node": "./src/lib/StorageAdaptor.fs.node.ts"
+    "#Storage.fs": {
+      "node": "./src/lib/Storage.fs.node.ts"
     }
   },
   "scripts": {

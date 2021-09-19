@@ -26,7 +26,7 @@ export abstract class CryptolaliaConfig {
   }
   calcBranchIdRange(highLevelBranchId: number) {
     const start = (highLevelBranchId - 1) * this.branchGroupCount;
-    const end = start + this.branchGroupCount - 1;
-    return { start: start, end: end };
+    const end = start + this.branchGroupCount;
+    return { start: start + 1, end: end };
   }
 }

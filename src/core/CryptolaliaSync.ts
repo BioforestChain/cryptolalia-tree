@@ -1,16 +1,25 @@
-import { Injectable, PromiseOut } from "@bfchain/util";
+import { TimeHelper } from "#TimeHelper";
+import { Injectable, Inject, PromiseOut, ModuleStroge } from "@bfchain/util";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 
+const ARGS = {
+  SYNC_CHANNE: Symbol("syncChannnel"),
+};
 /**
  * 同步模块，用于提供两个节点同步所需的数据，以及该数据解析；并最终将同步结果写入到本地数据库中
  */
 @Injectable()
 export class CryptolaliaSync<D = unknown> {
+  static readonly ARGS = ARGS;
   constructor(
+    @Inject(ARGS.SYNC_CHANNE)
+    private syncChannel: CryptolaliaSync.Channel<D>,
     private timelineTree: CryptolaliaTimelineTree<D>,
-    private syncChannel: MessaageChannel<CryptolaliaSync.SyncMsg<D>>,
+    private timeHelper: TimeHelper,
+    private moduleMap: ModuleStroge,
   ) {
-    this.syncChannel.onMessage((data) => {
+    /// 监听数据请求，提供数据响应服务
+    syncChannel.onMessage((data) => {
       if (
         !(Array.isArray(data) && data.length === 2) /* &&
         typeof msg[0] === "number" */
@@ -58,6 +67,8 @@ export class CryptolaliaSync<D = unknown> {
         }
       }
     });
+    /// 使用队列机制来进行响应任务
+    this.responser.startResponse();
   }
 
   private taskSeq = new Sequencer<CryptolaliaSync.ResponserTaskType<D>, number>(
@@ -140,7 +151,19 @@ export class CryptolaliaSync<D = unknown> {
       this.syncChannel.postMessage([reqId, msg]);
     });
   }
-  doSync() {}
+  async doSync() {
+    const now = this.timeHelper.now();
+    debugger;
+    const localeBranchRoute = await this.timelineTree.getBranchRoute(now);
+    console.log("localeBranchRoute", localeBranchRoute);
+
+    const remoteBranchRoute = await this.requestMessage({
+      cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE,
+      leafTime: now,
+    });
+
+    console.log("remoteBranchRoute", remoteBranchRoute);
+  }
 }
 
 const enum SYNC_MSG_CMD {
@@ -229,7 +252,12 @@ class Responser<T> {
   private async *_ResponseQueue() {
     do {
       const task = await this.taskSeq.shift();
-      await this.config.executeTask(task);
+      try {
+        await this.config.executeTask(task);
+      } catch (err) {
+        console.error("responser execute task error:", task, err);
+      }
+      yield; // 暂停，等待外部做响应频率的调控
     } while (true);
   }
   private _looper?: AsyncGenerator;
@@ -270,7 +298,9 @@ interface MessaageChannel<T> {
   ): void;
 }
 
-declare namespace CryptolaliaSync {
+export declare namespace CryptolaliaSync {
+  type Channel<D> = MessaageChannel<SyncMsg<D>>;
+
   type Msg<I = unknown, O = unknown> = { In: I; Out: O };
   namespace Msg {
     type InOut<S> = In<S> | Out<S>;

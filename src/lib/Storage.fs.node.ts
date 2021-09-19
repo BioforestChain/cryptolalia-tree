@@ -1,4 +1,4 @@
-import { Paths, StorageAdaptor } from "../core/StorageAdaptor";
+import { Storage } from "../core/Storage";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -6,6 +6,7 @@ import path from "node:path";
 import { Blob, Buffer } from "node:buffer";
 import { Inject } from "@bfchain/util";
 import yaml, { Type } from "js-yaml";
+import { env, cwd } from "node:process";
 
 const schema = yaml.DEFAULT_SCHEMA.extend([
   new Type("tag:bfchain.org,2021:js/map", {
@@ -39,6 +40,29 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
       return data instanceof Map;
     },
   }),
+  new Type("tag:bfchain.org,2021:js/set", {
+    kind: "sequence",
+    resolve(data) {
+      if (data === null) return true;
+      return true;
+    },
+    construct(data) {
+      const result = new Set();
+      for (let i = 0; i < data.length; ++i) {
+        result.add(data[i]);
+      }
+      return result;
+    },
+    represent(data) {
+      if (!(data instanceof Set)) {
+        throw new TypeError("no an set");
+      }
+      return [...data];
+    },
+    predicate(data) {
+      return data instanceof Set;
+    },
+  }),
 ]);
 const deserialize = (binary: Uint8Array) =>
   yaml.load(binary.toString(), { schema }) as any;
@@ -47,63 +71,54 @@ const serialize = (obj: any) => Buffer.from(yaml.dump(obj, { schema }));
 const ARGS = {
   TARGET_DIR: Symbol("targetDir"),
 };
-class NodeFilesystemsStorage extends StorageAdaptor {
+class NodeFilesystemsStorage extends Storage {
   static readonly ARGS = ARGS;
   constructor(
     @Inject(ARGS.TARGET_DIR, { optional: true })
-    private targetDir: string = process.cwd() + "/.cache/fs",
+    private targetDir: string = env.FSS_DIR || cwd() + "/.cache/fs",
   ) {
     super();
     if (!existsSync(targetDir)) {
       fs.mkdir(targetDir, { recursive: true });
     }
   }
-  currentPaths: Paths = path.normalize(this.targetDir).split(path.sep);
-  private getFilepath(paths: Paths) {
+  currentPaths: Storage.Paths = path.normalize(this.targetDir).split(path.sep);
+  private getFilepath(paths: Storage.Paths) {
     return this.currentPaths.concat(paths).join(path.sep);
   }
-  async setBinary(paths: Paths, data: Uint8Array): Promise<void> {
+  async setBinary(paths: Storage.Paths, data: Uint8Array) {
     const filepath = this.getFilepath(paths);
     await fs.mkdir(path.dirname(filepath), { recursive: true });
     await fs.writeFile(filepath, data);
   }
-  async setBlob(paths: Paths, data: Blob): Promise<void> {
-    return this.setBinary(paths, new Uint8Array(await data.arrayBuffer()));
-  }
-  async getBinary(paths: Paths): Promise<Uint8Array | undefined> {
+  async getBinary(paths: Storage.Paths) {
     const filepath = this.getFilepath(paths);
     if (existsSync(filepath)) {
       return fs.readFile(filepath);
     }
   }
-  async getBlob(paths: Paths): Promise<Blob | undefined> {
-    const binary = await this.getBinary(paths);
-    if (binary) {
-      return new Blob([binary]);
-    }
-  }
-  async getJsObject<T>(paths: Paths): Promise<T | undefined> {
+  async getJsObject<T>(paths: Storage.Paths) {
     const binary = await this.getBinary(paths);
     if (binary) {
       return deserialize(binary);
     }
   }
-  setJsObject<T>(paths: Paths, data: T): Promise<void> {
+  setJsObject<T>(paths: Storage.Paths, data: T) {
     return this.setBinary(paths, serialize(data));
   }
-  async has(paths: Paths): Promise<boolean> {
+  async has(paths: Storage.Paths) {
     const filepath = this.getFilepath(paths);
     return existsSync(filepath);
   }
-  async del(paths: Paths): Promise<boolean> {
+  async del(paths: Storage.Paths) {
     const filepath = this.getFilepath(paths);
     if (existsSync(filepath)) {
-      fs.rm(filepath, { recursive: true, force: true });
+      await fs.rm(filepath, { recursive: true, force: true });
       return true;
     }
     return false;
   }
-  async listPaths(paths: Paths): Promise<{ paths: Paths; keys: Paths }> {
+  async listPaths(paths: Storage.Paths) {
     const filepath = this.getFilepath(paths);
     const mul_paths: string[] = [];
     const mul_keys: string[] = [];
@@ -119,9 +134,9 @@ class NodeFilesystemsStorage extends StorageAdaptor {
         } catch {}
       }
     }
-    return { paths: mul_paths, keys: mul_keys };
+    return { paths: mul_paths, files: mul_keys };
   }
-  fork(paths: Paths): StorageAdaptor {
+  fork(paths: Storage.Paths): Storage {
     throw new Error("Method not implemented.");
   }
 }

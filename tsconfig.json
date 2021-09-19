@@ -52,8 +52,8 @@
       "#CryptoHelper": [
         "./src/lib/CryptoHelper.node.ts",
       ],
-      "#StorageAdaptor.fs": [
-        "./src/lib/StorageAdaptor.fs.node.ts",
+      "#Storage.fs": [
+        "./src/lib/Storage.fs.node.ts",
       ]
     }, /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
     // "rootDirs": ["./src","src/test"],                              /* List of root folders whose combined content represents the structure of the project at runtime. */
@@ -80,9 +80,9 @@
     "./src/core/CryptolaliaAssets.ts",
     "./src/core/CryptolaliaDataList.ts",
     "./src/core/index.ts",
-    "src/core/TimeHelper.ts",
-    "./src/core/StorageAdaptor.ts",
-    "src/lib/StorageAdaptor.fs.node.ts",
+    "./src/core/TimeHelper.ts",
+    "./src/core/Storage.ts",
+    "./src/lib/Storage.fs.node.ts",
     "./src/lib/TimeHelper.node.ts",
     "./src/lib/TimeHelper.web.ts",
     "./src/test/test.ts",

@@ -2,7 +2,7 @@ import {
   CryptoHelper as AbstractCryptoHelper,
   HashBuilder as AbstractHashBuilder,
 } from "../core/CryptoHelper";
-// import { AnyBlob } from "../core/StorageAdaptor";
+// import { AnyBlob } from "../core/Storage";
 import crypto from "node:crypto";
 
 export class CryptoHelper extends AbstractCryptoHelper {

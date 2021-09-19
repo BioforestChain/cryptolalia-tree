@@ -1,27 +1,16 @@
 import { CryptoHelper } from "#CryptoHelper";
-import { FilesystemsStorage } from "#StorageAdaptor.fs";
+import { FilesystemsStorage } from "#Storage.fs";
 import { TimeHelper } from "#TimeHelper";
 import { ModuleStroge, Resolve, sleep } from "@bfchain/util";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import Cryptolalia, { MessageHelper } from "../core/Cryptolalia";
 import { CryptolaliaConfig } from "../core/CryptolaliaConfig";
+import { CryptolaliaSync } from "../core/CryptolaliaSync";
 
 const moduleMap = new ModuleStroge();
 {
   Resolve(TimeHelper, moduleMap);
-}
-{
-  Resolve(
-    FilesystemsStorage,
-    moduleMap.installMask(
-      new ModuleStroge([
-        [
-          FilesystemsStorage.ARGS.TARGET_DIR,
-          path.join(process.cwd(), "./.cache/fs"),
-        ],
-      ]),
-    ),
-  );
 }
 {
   class MyConfig extends CryptolaliaConfig {
@@ -31,11 +20,12 @@ const moduleMap = new ModuleStroge();
   }
   Resolve(MyConfig, moduleMap);
 }
+
 type MyMessage = {
   time: number;
   content: string;
+  sender: string;
 };
-import { createHash } from "node:crypto";
 {
   class MyMessageHelper extends MessageHelper<MyMessage> {
     getSignature(msg: MyMessage): Uint8Array {
@@ -50,40 +40,94 @@ import { createHash } from "node:crypto";
 {
   Resolve(CryptoHelper, moduleMap);
 }
+const syncChannel1: CryptolaliaSync.Channel<MyMessage> = {
+  postMessage(msg) {},
+  onMessage(cb) {
+    syncChannel2.postMessage = cb;
+  },
+};
+const syncChannel2: CryptolaliaSync.Channel<MyMessage> = {
+  postMessage(msg) {},
+  onMessage(cb) {
+    syncChannel1.postMessage = cb;
+  },
+};
 
-const cryptolalia = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap);
+import { env, cwd } from "node:process";
+
+const moduleMap1 = new ModuleStroge(
+  [[CryptolaliaSync.ARGS.SYNC_CHANNE, syncChannel1]],
+  moduleMap,
+);
+{
+  env.FSS_DIR = path.join(cwd(), "./.cache/fs/1");
+  Resolve(FilesystemsStorage, moduleMap1);
+}
+
+const moduleMap2 = new ModuleStroge(
+  [[CryptolaliaSync.ARGS.SYNC_CHANNE, syncChannel2]],
+  moduleMap,
+);
+{
+  env.FSS_DIR = path.join(cwd(), "./.cache/fs/2");
+  Resolve(FilesystemsStorage, moduleMap2);
+}
+const cryptolalia1 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap1);
+const cryptolalia2 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap2);
 (async () => {
-  console.log(cryptolalia.config);
-  const { startTime } = cryptolalia.config;
-  // await cryptolalia.storage.del([]);
+  // console.log(cryptolalia1.config);
+  await cryptolalia1.storage.del([]);
+  await cryptolalia2.storage.del([]);
 
   // console.log(getInjectionToken(FilesystemsStorage));
-  // console.log(Reflect.getMetadata("design:paramtypes", StorageAdaptor));
+  // console.log(Reflect.getMetadata("design:paramtypes", Storage));
 
-  // console.log(cryptolalia.timelineTree.storage.targetDir);
-  // await cryptolalia.timelineTree.addLeaf(Buffer.from("hi"), Date.now());
-  // console.log(await cryptolalia.timelineTree.getBranchRoute(Date.now()));
+  // console.log(cryptolalia1.timelineTree.storage.targetDir);
+  // await cryptolalia1.timelineTree.addLeaf(Buffer.from("hi"), Date.now());
+  // console.log(await cryptolalia1.timelineTree.getBranchRoute(Date.now()));
   // for (let i = 0; i < 10; ++i) {
-  //   cryptolalia.dataList.addItem("hi~" + i + "~hi", startTime + i * 1e4);
+  //   cryptolalia1.dataList.addItem("hi~" + i + "~hi", startTime + i * 1e4);
   // }
 
-  // for await (const msg of cryptolalia.dataList.ItemReader(
+  // for await (const msg of cryptolalia1.dataList.ItemReader(
   //   +new Date(1631798288511.563),
   //   1,
   // )) {
   //   console.log(`[${new Date(msg.createTime).toLocaleString()}] ${msg.data}`);
   // }
   // console.log("----");
-  // for await (const msg of cryptolalia.dataList.ItemReader(
+  // for await (const msg of cryptolalia1.dataList.ItemReader(
   //   +new Date(1631798288511.563),
   //   -1,
   // )) {
   //   console.log(`[${new Date(msg.createTime).toLocaleString()}] ${msg.data}`);
   // }
 
-  await cryptolalia.addMsg({ content: "hi~ I'm Gaubee", time: Date.now() });
-  await sleep(1000);
-  await cryptolalia.addMsg({ content: "hi~ I'm Bangeel", time: Date.now() });
+  await cryptolalia1.addMsg({
+    content: "hi~ I'm Gaubee",
+    sender: "gaubee",
+    time: Date.now(),
+  });
+  await cryptolalia2.addMsg({
+    content: "hi~ I'm Bangeel",
+    sender: "bangeel",
+    time: Date.now(),
+  });
+  await cryptolalia1.sync.doSync();
+  // await cryptolalia2.sync.doSync();
 
-  console.log(await cryptolalia.getMsgList(Date.now()));
+  // console.group("cryptolalia1");
+  // const dataList1 = await cryptolalia1.getMsgList(Date.now());
+  // console.log(dataList1);
+  // console.groupEnd();
+
+  // console.group("cryptolalia2");
+  // const dataList2 = await cryptolalia2.getMsgList(Date.now());
+  // console.log(dataList2);
+  // console.groupEnd();
+
+  // console.assert(
+  //   JSON.stringify(dataList1) === JSON.stringify(dataList2),
+  //   "sync fail",
+  // );
 })().catch(console.error);

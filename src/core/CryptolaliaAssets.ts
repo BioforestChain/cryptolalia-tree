@@ -1,5 +1,5 @@
 import { Injectable } from "@bfchain/util";
-import { StorageAdaptor } from "./StorageAdaptor";
+import { Storage } from "./Storage";
 
 /**
  * 资源文件
@@ -10,7 +10,7 @@ import { StorageAdaptor } from "./StorageAdaptor";
 
 @Injectable()
 export class CryptolaliaAssets {
-  constructor(private storage: StorageAdaptor) {}
+  constructor(private storage: Storage) {}
 
   /// Audio
   addAudio(audio: Uint8Array) {

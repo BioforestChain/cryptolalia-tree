@@ -4,7 +4,7 @@ import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { CryptolaliaDataList, ORDER } from "./CryptolaliaDataList";
 import { CryptolaliaSync } from "./CryptolaliaSync";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
-import { StorageAdaptor } from "./StorageAdaptor";
+import { Storage } from "./Storage";
 import { TimeHelper } from "./TimeHelper";
 
 @Injectable()
@@ -33,7 +33,7 @@ export abstract class MessageHelper<D> {
   }
 }
 
-@Resolvable()
+@Injectable()
 export default class Cryptolalia<D> {
   constructor(
     private msgHelper: MessageHelper<D>,
@@ -42,8 +42,8 @@ export default class Cryptolalia<D> {
     readonly timelineTree: CryptolaliaTimelineTree<D>,
     readonly dataList: CryptolaliaDataList<RawDataItem>,
     readonly assets: CryptolaliaAssets,
-    // readonly sync: CryptolaliaSync,
-    readonly storage: StorageAdaptor,
+    readonly sync: CryptolaliaSync,
+    readonly storage: Storage,
   ) {}
   /**
    * 添加数据
