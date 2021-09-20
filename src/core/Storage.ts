@@ -39,6 +39,21 @@ export abstract class Storage extends StorageBase {
   abstract stopTransaction(
     transaction: TransactionStorage,
   ): BFChainUtil.PromiseMaybe<boolean>;
+
+  async requestTransaction<R>(
+    paths: Storage.Paths,
+    cb: (transaction: TransactionStorage) => R,
+  ) {
+    const transaction = await this.startTransaction(paths);
+    try {
+      const res = await cb(transaction);
+      await this.finishTransaction(transaction);
+      return res as unknown as Promise<BFChainUtil.PromiseType<R>>;
+    } catch (err) {
+      await this.stopTransaction(transaction);
+      throw err;
+    }
+  }
   abstract fork(paths: Storage.Paths): Storage;
 }
 

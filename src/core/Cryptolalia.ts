@@ -1,4 +1,4 @@
-import { Injectable, Resolvable } from "@bfchain/util";
+import { bindThis, Injectable } from "@bfchain/util";
 import { CryptolaliaAssets } from "./CryptolaliaAssets";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { CryptolaliaDataList, ORDER } from "./CryptolaliaDataList";
@@ -7,6 +7,7 @@ import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { MessageHelper } from "./MessageHelper";
 import { Storage } from "./Storage";
 import { TimeHelper } from "./TimeHelper";
+import { CryptolaliaCore, addMsg } from "./core";
 
 @Injectable()
 export default class Cryptolalia<D> {
@@ -15,34 +16,23 @@ export default class Cryptolalia<D> {
     readonly config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
     readonly timelineTree: CryptolaliaTimelineTree<D>,
-    readonly dataList: CryptolaliaDataList<RawDataItem>,
+    readonly dataList: CryptolaliaDataList<CryptolaliaCore.RawDataItem>,
     readonly assets: CryptolaliaAssets,
     readonly sync: CryptolaliaSync,
     readonly storage: Storage,
   ) {}
-  /**
-   * 添加数据
-   * @param msg 消息内容
-   */
-  async addMsg(msg: D) {
-    const success = await this.timelineTree.addLeaf(msg);
-    if (success !== false) {
-      const { branchId } = success;
-      await this.dataList.addItem({
-        sign: this.msgHelper.getSignature(msg),
-        branchId,
-      });
-      return true;
-    }
-    return false;
+  addMsg(msg: D) {
+    return addMsg(this.msgHelper, this.timelineTree, this.dataList, msg);
   }
+
   async getMsgList(
     timestamp: number,
     options: { offset?: number; limit?: number; order?: ORDER } = {},
   ) {
     const { offset = 0, limit = 40, order = ORDER.DOWN } = options;
 
-    const rawDataList: CryptolaliaDataList.DataItem<RawDataItem>[] = [];
+    const rawDataList: CryptolaliaDataList.DataItem<CryptolaliaCore.RawDataItem>[] =
+      [];
     const branchMap = new Map<
       number,
       BFChainUtil.PromiseMaybe<
@@ -96,11 +86,6 @@ export default class Cryptolalia<D> {
     return msgList;
   }
 }
-
-type RawDataItem = {
-  sign: Uint8Array;
-  branchId: number;
-};
 
 export declare namespace Cryptolalia {
   type CryptolaliaMessage<D> = {

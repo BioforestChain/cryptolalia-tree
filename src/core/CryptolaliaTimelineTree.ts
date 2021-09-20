@@ -1,9 +1,8 @@
 import { Injectable } from "@bfchain/util";
-import { getJsObject } from "./core";
 import { CryptoHelper } from "./CryptoHelper";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { MessageHelper } from "./MessageHelper";
-import { Storage } from "./Storage";
+import { Storage, TransactionStorage } from "./Storage";
 
 /**
  * 树状的时间线
@@ -22,7 +21,11 @@ export class CryptolaliaTimelineTree<D> {
     private messageHelper: MessageHelper<D>,
   ) {}
 
-  async addLeaf(leaf: D) {
+  addLeaf(leaf: D) {
+    return this._addLeaf(leaf, this.storage.fork(["timeline"]));
+  }
+
+  private async _addLeaf(leaf: D, transaction: TransactionStorage) {
     const { messageHelper } = this;
     const createTime = messageHelper.getCreateTime(leaf);
     const branchId = this.config.calcBranchId(createTime);
@@ -34,9 +37,9 @@ export class CryptolaliaTimelineTree<D> {
      * 2. 将数据正式写入到最底层的branch里头
      */
     //#region Step 0 判断数据是否存在，并顺便构建 Step 2所需要存储的数据(这里可以做一个并发合并作业)
-    const level0Path = ["timeline-blocks", `block-${branchId}`];
+    const level0Path = ["blocks", `block-${branchId}`];
     const branchData: CryptolaliaTimelineTree.BranchData<D> =
-      (await this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
+      (await transaction.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
         level0Path,
       )) || {
         indexedDigit: 8,
@@ -95,11 +98,7 @@ export class CryptolaliaTimelineTree<D> {
       curBranchId = this.config.calcNextBranchId(preBranchId);
 
       dirtyBranchHashInfoList.unshift({
-        paths: [
-          "timeline-tree-hash",
-          `level-${curlevel}`,
-          `branch-${curBranchId}`,
-        ],
+        paths: ["tree-hash", `level-${curlevel}`, `branch-${curBranchId}`],
         dirtyBranchId: preBranchId,
       });
 
@@ -107,7 +106,7 @@ export class CryptolaliaTimelineTree<D> {
     } while (curBranchId !== 1);
 
     for (const info of dirtyBranchHashInfoList) {
-      let branchHashInfo = await this.storage.getJsObject<BranchHashInfo>(
+      let branchHashInfo = await transaction.getJsObject<BranchHashInfo>(
         info.paths,
       );
       if (branchHashInfo !== undefined) {
@@ -126,15 +125,30 @@ export class CryptolaliaTimelineTree<D> {
           subHash: new Map(),
         };
       }
-      await this.storage.setJsObject(info.paths, branchHashInfo);
+      await transaction.setJsObject(info.paths, branchHashInfo);
     }
     //#endregion
 
     //#region Step 2 进行最后的数据写入
-    await this.storage.setJsObject(level0Path, branchData);
+    await transaction.setJsObject(level0Path, branchData);
     //#endregion
 
     return { branchId };
+  }
+
+  async addManyLeaf(leafs: Iterable<D>) {
+    const transaction = await this.storage.startTransaction(["timeline"]);
+    const result: Array<{
+      success: BFChainUtil.PromiseReturnType<
+        CryptolaliaTimelineTree<D>["_addLeaf"]
+      >;
+      leaf: D;
+    }> = [];
+    for (const leaf of leafs) {
+      result.push({ success: await this._addLeaf(leaf, transaction), leaf });
+    }
+    await this.storage.finishTransaction(transaction);
+    return result;
   }
 
   getLeafFromBranchData(

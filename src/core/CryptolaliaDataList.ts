@@ -1,8 +1,8 @@
-import { Storage } from "./Storage";
 import { TimeHelper } from "#TimeHelper";
-import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { Injectable, PromiseOut } from "@bfchain/util";
 import { getJsObject } from "./core";
+import { CryptolaliaConfig } from "./CryptolaliaConfig";
+import { Storage, TransactionStorage } from "./Storage";
 
 const compareUp = (t1: number, t2: number) => (t1 < t2 ? -1 : t1 > t2 ? 1 : 0);
 const compareDown = (t1: number, t2: number) =>
@@ -11,8 +11,7 @@ const compareDown = (t1: number, t2: number) =>
 class BranchHanlder<D> {
   constructor(
     private config: CryptolaliaConfig,
-    private timeHelper: TimeHelper,
-    private storage: Storage,
+    private timeHelper: TimeHelper, // private storage: Storage,
   ) {}
 
   private _cache = new Map<
@@ -25,14 +24,14 @@ class BranchHanlder<D> {
       writerQueue?: PromiseOut<void>;
     }
   >();
-  getDataList(branchId: number) {
-    const paths = ["data-list", `receipt-${branchId}`];
+  getDataList(transaction: TransactionStorage, branchId: number) {
+    const paths = [`receipt-${branchId}`];
     let cache = this._cache.get(branchId);
     if (!cache) {
       cache = {
         lastUpdateTime: this.timeHelper.now(),
         dataList: getJsObject(
-          this.storage,
+          transaction,
           paths,
           (dataList?: Array<CryptolaliaDataList.DataItem<D>>) => dataList || [],
         ),
@@ -57,6 +56,7 @@ class BranchHanlder<D> {
     return cache.dataList;
   }
   setDataList(
+    transaction: TransactionStorage,
     branchId: number,
     dataList: Array<CryptolaliaDataList.DataItem<D>>,
   ) {
@@ -78,11 +78,11 @@ class BranchHanlder<D> {
       const _cache = cache;
       const _wirterQueue = wirterQueue;
       queueMicrotask(async () => {
-        const paths = ["data-list", `receipt-${branchId}`];
+        const paths = [`receipt-${branchId}`];
         _cache.writerQueue = undefined;
         /// 正式写入
         try {
-          await this.storage.setJsObject(paths, _cache.dataList);
+          await transaction.setJsObject(paths, _cache.dataList);
           _wirterQueue.resolve();
         } catch (err) {
           _wirterQueue.reject(err);
@@ -102,7 +102,10 @@ class BranchHanlder<D> {
    * 这里假设2小时为一个branch，64为一个group，使用这套算法的那个人活100年。
    * 那么一生只会有不到7000个group，用强遍历也没问题~~
    */
-  private _getBranchMetaGroup(groupId: number) {
+  private _getBranchMetaGroup(
+    transaction: TransactionStorage,
+    groupId: number,
+  ) {
     if (this._metaCache?.groupId !== groupId) {
       this._metaCache = {
         groupId,
@@ -110,8 +113,8 @@ class BranchHanlder<D> {
       };
       const metaCache = this._metaCache;
       getJsObject(
-        this.storage,
-        ["data-list", "meta-branch", `group-${groupId}`],
+        transaction,
+        ["meta-branch", `group-${groupId}`],
         (map?: BranchMetaGroup) => {
           metaCache.cache = map;
           return map;
@@ -120,47 +123,64 @@ class BranchHanlder<D> {
     }
     return this._metaCache.cache;
   }
-  private _setBranchMetaGroup(groupId: number, metaGroup: BranchMetaGroup) {
+  private _setBranchMetaGroup(
+    transaction: TransactionStorage,
+    groupId: number,
+    metaGroup: BranchMetaGroup,
+  ) {
     this._metaCache = { groupId, cache: metaGroup };
-    return this.storage.setJsObject<BranchMetaGroup>(
-      ["data-list", "meta-branch", `group-${groupId}`],
+    return transaction.setJsObject<BranchMetaGroup>(
+      ["meta-branch", `group-${groupId}`],
       metaGroup,
     );
   }
-  async getBranchMeta(branchId: number) {
+  async getBranchMeta(transaction: TransactionStorage, branchId: number) {
     const groupId = this.config.calcNextBranchId(branchId);
-    const group = await this._getBranchMetaGroup(groupId);
+    const group = await this._getBranchMetaGroup(transaction, groupId);
     return group?.map.get(branchId);
   }
-  async setBranchMeta(branchId: number, meta: BranchMeta) {
+  async setBranchMeta(
+    transaction: TransactionStorage,
+    branchId: number,
+    meta: BranchMeta,
+  ) {
     const groupId = this.config.calcNextBranchId(branchId);
-    const group = (await this._getBranchMetaGroup(groupId)) || {
+    const group = (await this._getBranchMetaGroup(transaction, groupId)) || {
       groupId,
       map: new Map(),
     };
     group.map.set(branchId, meta);
-    return this._setBranchMetaGroup(groupId, group);
+    return this._setBranchMetaGroup(transaction, groupId, group);
   }
-  async upsertBranchMeta(branchId: number, metaSlice: Partial<BranchMeta>) {
-    const meta = (await this.getBranchMeta(branchId)) || {
+  async upsertBranchMeta(
+    transaction: TransactionStorage,
+    branchId: number,
+    metaSlice: Partial<BranchMeta>,
+  ) {
+    const meta = (await this.getBranchMeta(transaction, branchId)) || {
       preBranchId: branchId,
       nextBranchId: branchId,
     };
-    return this.setBranchMeta(branchId, Object.assign(meta, metaSlice));
+    return this.setBranchMeta(
+      transaction,
+      branchId,
+      Object.assign(meta, metaSlice),
+    );
   }
 
-  async *BranchIdWalker(startBranchId: number, order = ORDER.UP) {
+  async *BranchIdWalker(
+    transaction: TransactionStorage,
+    startBranchId: number,
+    order = ORDER.UP,
+  ) {
     const startGroupId = this.config.calcNextBranchId(startBranchId);
     let metaGroup: BranchMetaGroup | undefined;
     // 如果可以，先在同组里头查找，注意，这里可能因为startBranchId本身就是临界值，所以可能找空。但我们可以使用next/pre的指针来进行索引
-    metaGroup = await this._getBranchMetaGroup(startGroupId);
+    metaGroup = await this._getBranchMetaGroup(transaction, startGroupId);
 
     /// 找不到，进度暴力遍历模式，列出所有的组
     if (metaGroup === undefined) {
-      const { files: keys } = await this.storage.listPaths([
-        "data-list",
-        "meta-branch",
-      ]);
+      const { files: keys } = await transaction.listPaths(["meta-branch"]);
       const groupIdList: number[] = [];
       for (const key of keys) {
         if (key.startsWith("group-")) {
@@ -178,12 +198,11 @@ class BranchHanlder<D> {
       }
       while (index < groupIdList.length) {
         const groupId = groupIdList[index];
-        metaGroup = await this._getBranchMetaGroup(groupId);
+        metaGroup = await this._getBranchMetaGroup(transaction, groupId);
         if (metaGroup === undefined) {
           console.error(
             new Error(
-              `数据库异常，可能发生数据丢失(${this.storage.currentPaths}, ${[
-                "data-list",
+              `数据库异常，可能发生数据丢失(${transaction.currentPaths}, ${[
                 "meta-branch",
                 `group-${groupId}`,
               ]})`,
@@ -207,7 +226,7 @@ class BranchHanlder<D> {
       );
       if (branchIdList.length === 0) {
         throw new Error(
-          `数据库异常，可能是数据丢失，索引断链，需要重新整理数据重建索引(${this.storage.currentPaths}, ${metaGroup.groupId})`,
+          `数据库异常，可能是数据丢失，索引断链，需要重新整理数据重建索引(${transaction.currentPaths}, ${metaGroup.groupId})`,
         );
       }
       /**
@@ -244,7 +263,7 @@ class BranchHanlder<D> {
       if (nextGroupId === metaGroup.groupId) {
         return;
       }
-      metaGroup = await this._getBranchMetaGroup(nextGroupId);
+      metaGroup = await this._getBranchMetaGroup(transaction, nextGroupId);
     } while (true);
   }
 }
@@ -269,49 +288,47 @@ class MetaHanlder<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
-    private storage: Storage,
+    // private storage: Storage,
     private _branchHanlder: BranchHanlder<D>,
   ) {}
   private _meta?: BFChainUtil.PromiseMaybe<Meta>;
-  getMeta() {
+  getMeta(transaction: TransactionStorage) {
     if (this._meta === undefined) {
-      this._meta = getJsObject(
-        this.storage,
-        ["data-list", "meta"],
-        async (meta?: Meta) => {
-          /// 需要进行校准操作
-          if (meta) {
-            /// 因为可能写入了时间之后才写入了data-item
-            if (meta.firstBranchId !== 0) {
-              const dataList = await this._branchHanlder.getDataList(
-                meta.firstBranchId,
-              );
-              if (dataList.length === 0) {
-                meta.firstBranchId = 0;
-              }
-            }
-
-            if (meta.lastBranchId !== meta.secondLastBranchId) {
-              const dataList = await this._branchHanlder.getDataList(
-                meta.lastBranchId,
-              );
-              if (dataList.length === 0) {
-                meta.lastBranchId = meta.secondLastBranchId;
-              }
+      this._meta = getJsObject(transaction, ["meta"], async (meta?: Meta) => {
+        /// 需要进行校准操作
+        if (meta) {
+          /// 因为可能写入了时间之后才写入了data-item
+          if (meta.firstBranchId !== 0) {
+            const dataList = await this._branchHanlder.getDataList(
+              transaction,
+              meta.firstBranchId,
+            );
+            if (dataList.length === 0) {
+              meta.firstBranchId = 0;
             }
           }
-          return (this._meta = meta ?? {
-            firstBranchId: 0,
-            lastBranchId: 0,
-            secondLastBranchId: 0,
-          });
-        },
-      );
+
+          if (meta.lastBranchId !== meta.secondLastBranchId) {
+            const dataList = await this._branchHanlder.getDataList(
+              transaction,
+              meta.lastBranchId,
+            );
+            if (dataList.length === 0) {
+              meta.lastBranchId = meta.secondLastBranchId;
+            }
+          }
+        }
+        return (this._meta = meta ?? {
+          firstBranchId: 0,
+          lastBranchId: 0,
+          secondLastBranchId: 0,
+        });
+      });
     }
     return this._meta;
   }
-  setMeta(meta: Meta) {
-    return this.storage.setJsObject(["data-list", "meta"], meta);
+  setMeta(transaction: TransactionStorage, meta: Meta) {
+    return transaction.setJsObject(["meta"], meta);
   }
 }
 /**
@@ -340,23 +357,27 @@ export class CryptolaliaDataList<D> {
     private _branchHanlder: BranchHanlder<D>,
     private _metaHanlder: MetaHanlder<D>,
   ) {}
+  private _dataListStorage = this.storage.fork(["datalist"]);
 
   /**梳理元数据 */
-  private async _upsertMetaWhenAddNewItem(branchId: number) {
-    const meta = await this._metaHanlder.getMeta();
+  private async _upsertMetaWhenAddNewItem(
+    transaction: TransactionStorage,
+    branchId: number,
+  ) {
+    const meta = await this._metaHanlder.getMeta(transaction);
     if (meta.firstBranchId === 0) {
       meta.firstBranchId = branchId;
       meta.secondLastBranchId = branchId;
       meta.lastBranchId = branchId;
-      await this._metaHanlder.setMeta(meta);
+      await this._metaHanlder.setMeta(transaction, meta);
     } else if (meta.lastBranchId !== branchId) {
       const preBranchId = (meta.secondLastBranchId = meta.lastBranchId);
       meta.lastBranchId = branchId;
-      await this._metaHanlder.setMeta(meta);
-      await this._branchHanlder.upsertBranchMeta(preBranchId, {
+      await this._metaHanlder.setMeta(transaction, meta);
+      await this._branchHanlder.upsertBranchMeta(transaction, preBranchId, {
         nextBranchId: branchId,
       });
-      await this._branchHanlder.setBranchMeta(branchId, {
+      await this._branchHanlder.setBranchMeta(transaction, branchId, {
         preBranchId,
         nextBranchId: branchId,
       });
@@ -365,61 +386,83 @@ export class CryptolaliaDataList<D> {
 
   private _perNow = 0;
   /**添加元素 */
-  async addItem(data: D, time = this.timeHelper.now()) {
+  addItem(data: D, time = this.timeHelper.now()) {
     const now = this.timeHelper.max(this._perNow + 1, time);
     this._perNow = now;
     const branchId = this.config.calcBranchId(now);
 
-    // 梳理元数据
-    await this._upsertMetaWhenAddNewItem(branchId);
+    return this._dataListStorage.requestTransaction([], async (transaction) => {
+      // 梳理元数据
+      await this._upsertMetaWhenAddNewItem(transaction, branchId);
 
-    const dataList = await this._branchHanlder.getDataList(branchId);
-    dataList.push({
-      insertTime: now,
-      data: data,
-    });
-    await this._branchHanlder.setDataList(branchId, dataList);
-    return time;
-  }
-  /**同一时间添加多个元素 */
-  async addManyItem(datas: Iterable<D>, time = this.timeHelper.now()) {
-    let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
-    let perBranchId = 0;
-    const timeList: number[] = [];
-    for (const data of datas) {
-      const now = this.timeHelper.max(this._perNow + 1, time);
-      timeList.push(now);
-      this._perNow = now;
-      const branchId = this.config.calcBranchId(now);
-      if (branchId !== perBranchId) {
-        perBranchId = branchId;
-        // 梳理元数据
-        await this._upsertMetaWhenAddNewItem(branchId);
-        if (dataList) {
-          await this._branchHanlder.setDataList(branchId, dataList);
-          dataList = undefined;
-        }
-      }
-      if (dataList === undefined) {
-        dataList = await this._branchHanlder.getDataList(branchId);
-      }
+      const dataList = await this._branchHanlder.getDataList(
+        transaction,
+        branchId,
+      );
       dataList.push({
         insertTime: now,
         data: data,
       });
-    }
+      await this._branchHanlder.setDataList(transaction, branchId, dataList);
 
-    if (dataList) {
-      await this._branchHanlder.setDataList(perBranchId, dataList);
-    }
-    return timeList;
+      return time;
+    });
+  }
+  /**同一时间添加多个元素 */
+  addManyItem(datas: Iterable<D>, time = this.timeHelper.now()) {
+    return this._dataListStorage.requestTransaction([], async (transaction) => {
+      let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
+      let perBranchId = 0;
+      const timeList: number[] = [];
+      for (const data of datas) {
+        const now = this.timeHelper.max(this._perNow + 1, time);
+        timeList.push(now);
+        this._perNow = now;
+        const branchId = this.config.calcBranchId(now);
+        if (branchId !== perBranchId) {
+          perBranchId = branchId;
+          // 梳理元数据
+          await this._upsertMetaWhenAddNewItem(transaction, branchId);
+          if (dataList) {
+            await this._branchHanlder.setDataList(
+              transaction,
+              branchId,
+              dataList,
+            );
+            dataList = undefined;
+          }
+        }
+        if (dataList === undefined) {
+          dataList = await this._branchHanlder.getDataList(
+            transaction,
+            branchId,
+          );
+        }
+        dataList.push({
+          insertTime: now,
+          data: data,
+        });
+      }
+
+      if (dataList) {
+        await this._branchHanlder.setDataList(
+          transaction,
+          perBranchId,
+          dataList,
+        );
+      }
+      return timeList;
+    });
   }
   /**从某一个时间点开始读取数据 */
   async *ItemReader(timestamp: number, order = ORDER.UP) {
     let branchWalker: AsyncGenerator<number> | undefined;
     let branchId = this.config.calcBranchId(timestamp);
     do {
-      const dataList = await this._branchHanlder.getDataList(branchId);
+      const dataList = await this._branchHanlder.getDataList(
+        this._dataListStorage,
+        branchId,
+      );
 
       let start = 0;
       let end = dataList.length;
@@ -450,7 +493,11 @@ export class CryptolaliaDataList<D> {
         }
       }
 
-      branchWalker ??= this._branchHanlder.BranchIdWalker(branchId, order);
+      branchWalker ??= this._branchHanlder.BranchIdWalker(
+        this._dataListStorage,
+        branchId,
+        order,
+      );
       const walkInfo = await branchWalker.next();
       if (walkInfo.done) {
         return;
