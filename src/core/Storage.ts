@@ -24,7 +24,6 @@ export abstract class StorageBase {
     paths: Storage.Paths;
     files: Storage.Paths;
   }>;
-  abstract fork(paths: Storage.Paths): Storage;
 }
 @Injectable()
 export abstract class Storage extends StorageBase {
@@ -40,6 +39,7 @@ export abstract class Storage extends StorageBase {
   abstract stopTransaction(
     transaction: TransactionStorage,
   ): BFChainUtil.PromiseMaybe<boolean>;
+  abstract fork(paths: Storage.Paths): Storage;
 }
 
 @Resolvable()

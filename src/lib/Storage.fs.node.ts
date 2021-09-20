@@ -4,7 +4,6 @@ import yaml, { Type } from "js-yaml";
 import { Buffer } from "node:buffer";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { cwd, env } from "node:process";
 import { Storage, StorageBase } from "../core/Storage";
@@ -65,13 +64,155 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
     },
   }),
 ]);
-const deserialize = (binary: Uint8Array) =>
+const deserialize = <T = unknown>(binary: Uint8Array) =>
   yaml.load(binary.toString(), { schema }) as any;
-const serialize = (obj: any) => Buffer.from(yaml.dump(obj, { schema }));
+const serialize = (obj: any) =>
+  Buffer.from(yaml.dump(obj, { schema })) as Uint8Array;
 
 const ARGS = {
   TARGET_DIR: Symbol("targetDir"),
 };
+
+type MemoryFolder = Map<string, MemoryFile | { folder: MemoryFolder }>;
+type MemoryFile =
+  | { binary: Uint8Array; jsobj?: { value: unknown } }
+  | { jsobj: { value: unknown }; binary?: Uint8Array }
+  | { jsobj: { value: unknown }; binary: Uint8Array };
+class MemoryFilesystemsStorageBase extends StorageBase {
+  constructor(readonly currentPaths: Storage.Paths) {
+    super();
+  }
+  readonly _memFolder: MemoryFolder = new Map();
+  setBinary(paths: Storage.Paths, data: Uint8Array) {
+    const folder = this._makeFolder(paths, paths.length - 2);
+    folder.set(paths[paths.length - 1], { binary: data });
+  }
+
+  private _makeFolder(paths: Storage.Paths, end = paths.length - 1) {
+    let folder = this._memFolder;
+    for (let index = 0; index <= end; index++) {
+      const path = paths[index];
+      let next = folder.get(path);
+      if (next === undefined) {
+        folder.set(path, (next = { folder: new Map() }));
+      }
+      if ("folder" in next) {
+        folder = next.folder;
+      } else {
+        throw new Error("no an paths:" + paths);
+      }
+    }
+    return folder;
+  }
+  private _getFolder(paths: Storage.Paths, end = paths.length - 1) {
+    let folder = this._memFolder;
+    for (let index = 0; index <= end; index++) {
+      const path = paths[index];
+      let next = folder.get(path);
+      if (next === undefined) {
+        return;
+      }
+      if ("folder" in next) {
+        folder = next.folder;
+      } else {
+        return;
+      }
+    }
+    return folder;
+  }
+
+  private _getFile(paths: Storage.Paths) {
+    let folder = this._memFolder;
+    for (let index = 0, end = paths.length - 2; index < end; index++) {
+      const path = paths[index];
+      const next = folder.get(path);
+      if (next === undefined || !("folder" in next)) {
+        return;
+      }
+      folder = next.folder;
+    }
+    const file = folder.get(paths[paths.length - 1]);
+    if (file === undefined || "folder" in file) {
+      return;
+    }
+    return file;
+  }
+  getBinary(paths: Storage.Paths) {
+    const file = this._getFile(paths);
+    if (file === undefined) {
+      return;
+    }
+    if ("binary" in file) {
+      return file.binary;
+    }
+    return (file.binary = serialize(file.jsobj));
+  }
+  getJsObject<T>(
+    paths: Storage.Paths,
+  ): BFChainUtil.PromiseMaybe<T | undefined> {
+    const file = this._getFile(paths);
+    if (file === undefined) {
+      return;
+    }
+    if ("jsobj" in file) {
+      return file.jsobj!.value as T;
+    }
+
+    return (file.jsobj = { value: deserialize<T>(file.binary) }).value as T;
+  }
+  setJsObject<T>(paths: Storage.Paths, data: T) {
+    const folder = this._makeFolder(paths, paths.length - 2);
+    folder.set(paths[paths.length - 1], { jsobj: { value: data } });
+  }
+  has(paths: Storage.Paths) {
+    const folder = this._getFolder(paths, paths.length - 2);
+    if (folder === undefined) {
+      return false;
+    }
+    return folder.has(paths[paths.length - 1]);
+  }
+  del(paths: Storage.Paths): BFChainUtil.PromiseMaybe<boolean> {
+    const folder = this._getFolder(paths, paths.length - 2);
+    if (folder === undefined) {
+      return false;
+    }
+    folder.clear();
+    return true;
+  }
+  listPaths(
+    paths: Storage.Paths,
+  ): BFChainUtil.PromiseMaybe<{ paths: Storage.Paths; files: Storage.Paths }> {
+    const folder = this._getFolder(paths, paths.length - 2);
+    const res = {
+      paths: [] as string[],
+      files: [] as string[],
+    };
+
+    if (folder !== undefined) {
+      for (const [key, val] of folder) {
+        if ("folder" in val) {
+          res.paths.push(key);
+        } else {
+          res.files.push(key);
+        }
+      }
+    }
+    return res;
+  }
+  *WalkFiles(
+    paths: Storage.Paths = [],
+    folder = this._memFolder,
+  ): Generator<[Storage.Paths, MemoryFile]> {
+    for (const [path, fileOrFolder] of folder) {
+      const subPaths = [...paths, path];
+      if ("folder" in fileOrFolder) {
+        yield* this.WalkFiles(subPaths, fileOrFolder.folder);
+      } else {
+        yield [subPaths, fileOrFolder];
+      }
+    }
+  }
+}
 class NodeFilesystemsStorageBase extends StorageBase {
   static readonly ARGS = ARGS;
   constructor(
@@ -201,13 +342,10 @@ class Del {
 }
 
 class NodeFilesystemsTransactionStorage extends StorageBase {
-  readonly _cacheStore = new NodeFilesystemsStorageBase(this.transactionDir);
+  readonly _cacheStore = new MemoryFilesystemsStorageBase(["transaction"]);
   readonly _targetStore = new NodeFilesystemsStorageBase(this.sourceTargetDir);
   readonly _del = new Del();
-  constructor(
-    readonly transactionDir: string,
-    readonly sourceTargetDir: string,
-  ) {
+  constructor(readonly sourceTargetDir: string) {
     super();
   }
   currentPaths: Storage.Paths = path
@@ -274,7 +412,6 @@ class NodeFilesystemsStorage
   extends NodeFilesystemsStorageBase
   implements Storage
 {
-  private _tmpDirRoot = tmpdir();
   private _transactionMap = new Map<
     string,
     {
@@ -285,8 +422,6 @@ class NodeFilesystemsStorage
   >();
   // private _
   async startTransaction(paths: Storage.Paths) {
-    const tmpName = `nfs-trs-${Math.random().toString(36).substr(2)}`;
-
     const targetDir = path.resolve(this.targetDir, ...paths);
     let lock = this._transactionMap.get(targetDir);
     if (lock) {
@@ -295,10 +430,7 @@ class NodeFilesystemsStorage
       await waitter.promise;
     }
     lock = {
-      transaction: new NodeFilesystemsTransactionStorage(
-        path.join(this._tmpDirRoot, tmpName),
-        targetDir,
-      ),
+      transaction: new NodeFilesystemsTransactionStorage(targetDir),
       finished: new PromiseOut<void>(),
       queue: this._transactionMap.get(targetDir)?.queue || [],
     };
@@ -318,10 +450,17 @@ class NodeFilesystemsStorage
     for (const paths of transaction._del.ls()) {
       await transaction._targetStore.del(paths);
     }
-    await fs.cp(transaction.transactionDir, transaction.sourceTargetDir, {
-      recursive: true,
-    });
-    await transaction._cacheStore.del([]);
+
+    const targetStorage = transaction._targetStore;
+    for (const [paths, file] of transaction._cacheStore.WalkFiles()) {
+      await targetStorage.setBinary(
+        paths,
+        file.binary || serialize(file.jsobj!.value),
+      );
+    }
+
+    // await transaction._cacheStore.del([]);
+    lock.finished.resolve();
     return true;
   }
   async stopTransaction(transaction: NodeFilesystemsTransactionStorage) {
@@ -329,7 +468,8 @@ class NodeFilesystemsStorage
     if (lock === undefined || lock.transaction !== transaction) {
       return false;
     }
-    await transaction._cacheStore.del([]);
+
+    // await transaction._cacheStore.del([]);
     lock.finished.resolve();
     return true;
   }

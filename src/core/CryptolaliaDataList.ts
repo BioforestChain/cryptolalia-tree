@@ -382,7 +382,7 @@ export class CryptolaliaDataList<D> {
     return time;
   }
   /**同一时间添加多个元素 */
-  async addItems(datas: Iterable<D>, time = this.timeHelper.now()) {
+  async addManyItem(datas: Iterable<D>, time = this.timeHelper.now()) {
     let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
     let perBranchId = 0;
     const timeList: number[] = [];
