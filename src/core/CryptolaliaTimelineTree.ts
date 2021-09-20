@@ -32,7 +32,6 @@ export class CryptolaliaTimelineTree<D> {
      * 1. 先进行逐级（从高level到低level）标记branchHash为dirty
      * 2. 将数据正式写入到最底层的branch里头
      */
-
     //#region Step 0 判断数据是否存在，并顺便构建 Step 2所需要存储的数据(这里可以做一个并发合并作业)
     const level0Path = ["timeline-blocks", `block-${branchId}`];
     const branchData: CryptolaliaTimelineTree.BranchData<D> =
@@ -49,27 +48,23 @@ export class CryptolaliaTimelineTree<D> {
       /// 尝试写入索引
       const indexe = getIndexe(sign, branchData.indexedDigit);
 
-      /**是否发生索引冲突，需要重建索引 */
-      let reIndexes = false;
       const oldLeaf = branchData.mapData.get(indexe);
       // 不存在数据，可以直接写入
       if (oldLeaf === undefined) {
         branchData.mapData.set(indexe, leaf);
+        break;
       }
       // 已经存在数据
-      else if (messageHelper.msgIsSign(oldLeaf, sign)) {
+      if (messageHelper.msgIsSign(oldLeaf, sign)) {
         return false;
       }
-      // 发生冲突，需要重构索引
-      else {
-        if (branchData.indexedDigit === 256) {
-          console.error("signature should be equal", sign, oldLeaf);
-          throw new Error(`out of indexedDigit`);
-        }
-        reIndexes = true;
+
+      /// 发生冲突，需要重构索引
+      if (branchData.indexedDigit === 256) {
+        console.error("signature should be equal", sign, oldLeaf);
+        throw new Error(`out of indexedDigit`);
       }
 
-      /// 重构索引
       const indexedDigit = (branchData.indexedDigit = (branchData.indexedDigit *
         2) as IndexedDigit);
 
