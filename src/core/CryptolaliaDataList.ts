@@ -2,6 +2,7 @@ import { Storage } from "./Storage";
 import { TimeHelper } from "#TimeHelper";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { Injectable, PromiseOut } from "@bfchain/util";
+import { getJsObject } from "./core";
 
 const compareUp = (t1: number, t2: number) => (t1 < t2 ? -1 : t1 > t2 ? 1 : 0);
 const compareDown = (t1: number, t2: number) =>
@@ -18,9 +19,9 @@ class BranchHanlder<D> {
     number,
     {
       lastUpdateTime: number;
-      dataList:
-        | Array<CryptolaliaDataList.DataItem<D>>
-        | Promise<Array<CryptolaliaDataList.DataItem<D>>>;
+      dataList: BFChainUtil.PromiseMaybe<
+        Array<CryptolaliaDataList.DataItem<D>>
+      >;
       writerQueue?: PromiseOut<void>;
     }
   >();
@@ -30,9 +31,11 @@ class BranchHanlder<D> {
     if (!cache) {
       cache = {
         lastUpdateTime: this.timeHelper.now(),
-        dataList: this.storage
-          .getJsObject<Array<CryptolaliaDataList.DataItem<D>>>(paths)
-          .then((data) => data || []),
+        dataList: getJsObject(
+          this.storage,
+          paths,
+          (dataList?: Array<CryptolaliaDataList.DataItem<D>>) => dataList || [],
+        ),
       };
       this._cache.set(branchId, cache);
 
@@ -77,11 +80,13 @@ class BranchHanlder<D> {
       queueMicrotask(async () => {
         const paths = ["data-list", `receipt-${branchId}`];
         _cache.writerQueue = undefined;
-
         /// 正式写入
-        this.storage
-          .setJsObject(paths, _cache.dataList)
-          .then(_wirterQueue.resolve, _wirterQueue.reject);
+        try {
+          await this.storage.setJsObject(paths, _cache.dataList);
+          _wirterQueue.resolve();
+        } catch (err) {
+          _wirterQueue.reject(err);
+        }
       });
     }
     return wirterQueue.promise;
@@ -101,18 +106,17 @@ class BranchHanlder<D> {
     if (this._metaCache?.groupId !== groupId) {
       this._metaCache = {
         groupId,
-        cache: this.storage
-          .getJsObject<BranchMetaGroup>([
-            "data-list",
-            "meta-branch",
-            `group-${groupId}`,
-          ])
-          .then((map) => {
-            metaCache.cache = map;
-            return map;
-          }),
+        cache: undefined,
       };
       const metaCache = this._metaCache;
+      getJsObject(
+        this.storage,
+        ["data-list", "meta-branch", `group-${groupId}`],
+        (map?: BranchMetaGroup) => {
+          metaCache.cache = map;
+          return map;
+        },
+      );
     }
     return this._metaCache.cache;
   }
@@ -271,9 +275,10 @@ class MetaHanlder<D> {
   private _meta?: BFChainUtil.PromiseMaybe<Meta>;
   getMeta() {
     if (this._meta === undefined) {
-      this._meta = this.storage
-        .getJsObject<Meta>(["data-list", "meta"])
-        .then(async (meta) => {
+      this._meta = getJsObject(
+        this.storage,
+        ["data-list", "meta"],
+        async (meta?: Meta) => {
           /// 需要进行校准操作
           if (meta) {
             /// 因为可能写入了时间之后才写入了data-item
@@ -300,7 +305,8 @@ class MetaHanlder<D> {
             lastBranchId: 0,
             secondLastBranchId: 0,
           });
-        });
+        },
+      );
     }
     return this._meta;
   }

@@ -1,4 +1,5 @@
 import { Injectable } from "@bfchain/util";
+import { getJsObject } from "./core";
 import { CryptoHelper } from "./CryptoHelper";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { MessageHelper } from "./MessageHelper";
@@ -149,10 +150,8 @@ export class CryptolaliaTimelineTree<D> {
 
   async getBranchData(branchId: number) {
     const level1Path = ["timeline-blocks", `block-${branchId}`];
-    return (
-      this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
-        level1Path,
-      ) || []
+    return this.storage.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
+      level1Path,
     );
   }
 

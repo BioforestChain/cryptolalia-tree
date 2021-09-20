@@ -7,12 +7,10 @@ export abstract class StorageBase {
     paths: Storage.Paths,
     data: Uint8Array,
   ): BFChainUtil.PromiseMaybe<void>;
-  // abstract setBlob(paths: Paths, data: AnyBlob): BFChainUtil.PromiseMaybe<void>;
   abstract getBinary(
     paths: Storage.Paths,
   ): BFChainUtil.PromiseMaybe<Uint8Array | undefined>;
 
-  // abstract getBlob(paths: Paths): BFChainUtil.PromiseMaybe<AnyBlob | undefined>;
   abstract getJsObject<T>(
     paths: Storage.Paths,
   ): BFChainUtil.PromiseMaybe<T | undefined>;
