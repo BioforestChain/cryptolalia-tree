@@ -57,7 +57,7 @@ export class CryptolaliaTimelineTree<D> {
         branchData.mapData.set(indexe, leaf);
       }
       // 已经存在数据
-      else if (messageHelper.equalSignature(oldLeaf, sign)) {
+      else if (messageHelper.msgIsSign(oldLeaf, sign)) {
         return false;
       }
       // 发生冲突，需要重构索引
@@ -147,7 +147,7 @@ export class CryptolaliaTimelineTree<D> {
   ) {
     const indexe = getIndexe(sign, branchData.indexedDigit);
     const leaf = branchData.mapData.get(indexe);
-    if (leaf && this.messageHelper.equalSignature(leaf, sign)) {
+    if (leaf && this.messageHelper.msgIsSign(leaf, sign)) {
       return leaf;
     }
   }
