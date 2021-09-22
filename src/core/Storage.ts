@@ -25,7 +25,6 @@ export abstract class StorageBase {
     files: Storage.Paths;
   }>;
 }
-@Injectable()
 export abstract class Storage extends StorageBase {
   /**开始一个事务 */
   abstract startTransaction(
@@ -39,25 +38,30 @@ export abstract class Storage extends StorageBase {
   abstract stopTransaction(
     transaction: TransactionStorage,
   ): BFChainUtil.PromiseMaybe<boolean>;
-
-  async requestTransaction<R>(
+  abstract requestTransaction<R>(
     paths: Storage.Paths,
     cb: (transaction: TransactionStorage) => R,
-  ) {
-    const transaction = await this.startTransaction(paths);
-    try {
-      const res = await cb(transaction);
-      await this.finishTransaction(transaction);
-      return res as unknown as Promise<BFChainUtil.PromiseType<R>>;
-    } catch (err) {
-      await this.stopTransaction(transaction);
-      throw err;
-    }
-  }
+  ): Promise<BFChainUtil.PromiseType<R>>;
+
   abstract fork(paths: Storage.Paths): Storage;
 }
 
-@Resolvable()
+export const commonRequestTransaction = async <R>(
+  storage: Storage,
+  paths: Storage.Paths,
+  cb: (transaction: TransactionStorage) => R,
+) => {
+  const transaction = await storage.startTransaction(paths);
+  try {
+    const res = await cb(transaction);
+    await storage.finishTransaction(transaction);
+    return res as unknown as Promise<BFChainUtil.PromiseType<R>>;
+  } catch (err) {
+    await storage.stopTransaction(transaction);
+    throw err;
+  }
+};
+
 export abstract class TransactionStorage extends StorageBase {}
 export abstract class FileAtomics {
   abstract exists(paths: Storage.Paths): BFChainUtil.PromiseMaybe<boolean>;

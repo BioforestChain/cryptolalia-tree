@@ -4,7 +4,8 @@ import { TimeHelper } from "#TimeHelper";
 import { ModuleStroge, Resolve, sleep } from "@bfchain/util";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import Cryptolalia, { MessageHelper } from "../core/Cryptolalia";
+import Cryptolalia from "../core/Cryptolalia";
+import { MessageHelper } from "../core/MessageHelper";
 import { CryptolaliaConfig } from "../core/CryptolaliaConfig";
 import { CryptolaliaSync } from "../core/CryptolaliaSync";
 
@@ -103,16 +104,23 @@ const cryptolalia2 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap2);
   //   console.log(`[${new Date(msg.createTime).toLocaleString()}] ${msg.data}`);
   // }
 
-  await cryptolalia1.addMsg({
-    content: "hi~ I'm Gaubee",
-    sender: "gaubee",
-    time: Date.now(),
-  });
-  await cryptolalia2.addMsg({
-    content: "hi~ I'm Bangeel",
-    sender: "bangeel",
-    time: Date.now(),
-  });
+  console.assert(
+    await cryptolalia1.addMsg({
+      content: "hi~ I'm Gaubee",
+      sender: "gaubee",
+      time: Date.now(),
+    }),
+  );
+  console.assert(
+    await cryptolalia2.addMsg({
+      content: "hi~ I'm Bangeel",
+      sender: "bangeel",
+      time: Date.now(),
+    }),
+  );
+
+  debugger;
+  // console.log(await cryptolalia1.timelineTree.getBranchRoute(Date.now()));
   await cryptolalia1.sync.doSync();
   // await cryptolalia2.sync.doSync();
 

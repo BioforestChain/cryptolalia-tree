@@ -6,7 +6,12 @@ import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { cwd, env } from "node:process";
-import { Storage, StorageBase } from "../core/Storage";
+import {
+  commonRequestTransaction,
+  Storage,
+  StorageBase,
+  TransactionStorage,
+} from "../core/Storage";
 
 const schema = yaml.DEFAULT_SCHEMA.extend([
   new Type("tag:bfchain.org,2021:js/map", {
@@ -123,7 +128,7 @@ class MemoryFilesystemsStorageBase extends StorageBase {
 
   private _getFile(paths: Storage.Paths) {
     let folder = this._memFolder;
-    for (let index = 0, end = paths.length - 2; index < end; index++) {
+    for (let index = 0, end = paths.length - 2; index <= end; index++) {
       const path = paths[index];
       const next = folder.get(path);
       if (next === undefined || !("folder" in next)) {
@@ -171,6 +176,11 @@ class MemoryFilesystemsStorageBase extends StorageBase {
     }
     return folder.has(paths[paths.length - 1]);
   }
+  /**
+   * @todo 需要支持del([])
+   * @param paths
+   * @returns
+   */
   del(paths: Storage.Paths): BFChainUtil.PromiseMaybe<boolean> {
     const folder = this._getFolder(paths, paths.length - 2);
     if (folder === undefined) {
@@ -230,7 +240,10 @@ class NodeFilesystemsStorageBase extends StorageBase {
   }
   async setBinary(paths: Storage.Paths, data: Uint8Array) {
     const filepath = this.getFilepath(paths);
-    await fs.mkdir(path.dirname(filepath), { recursive: true });
+    const dir = path.dirname(filepath);
+    if (existsSync(dir) === false) {
+      await fs.mkdir(path.dirname(filepath), { recursive: true });
+    }
     await fs.writeFile(filepath, data);
   }
   async getBinary(paths: Storage.Paths) {
@@ -277,9 +290,6 @@ class NodeFilesystemsStorageBase extends StorageBase {
       }
     }
     return { paths: mul_paths, files: mul_keys };
-  }
-  fork(paths: Storage.Paths): Storage {
-    throw new Error("Method not implemented.");
   }
 }
 
@@ -330,7 +340,12 @@ class Del {
       prevDelPaths: Storage.Paths,
       pathMap: DelPathMap,
     ): Storage.Paths[] => {
-      const pathsList: Storage.Paths[] = [prevDelPaths];
+      const pathsList: Storage.Paths[] = [];
+      if (pathMap.size === 0) {
+        if (prevDelPaths.length !== 0) {
+          pathsList.push(prevDelPaths);
+        }
+      }
       for (const [path, _pathMap] of pathMap) {
         pathsList.push(...lsPaths([...prevDelPaths, path], _pathMap));
       }
@@ -403,9 +418,6 @@ class NodeFilesystemsTransactionStorage extends StorageBase {
   ): BFChainUtil.PromiseMaybe<{ paths: Storage.Paths; files: Storage.Paths }> {
     throw new Error("Method not implemented.");
   }
-  fork(paths: Storage.Paths): Storage {
-    throw new Error("Method not implemented.");
-  }
 }
 
 class NodeFilesystemsStorage
@@ -423,20 +435,26 @@ class NodeFilesystemsStorage
   // private _
   async startTransaction(paths: Storage.Paths) {
     const targetDir = path.resolve(this.targetDir, ...paths);
-    let lock = this._transactionMap.get(targetDir);
-    if (lock) {
+    let _lock = this._transactionMap.get(targetDir);
+    if (_lock) {
+      debugger;
       const waitter = new PromiseOut<void>();
-      lock.queue.push(waitter);
+      _lock.queue.push(waitter);
       await waitter.promise;
     }
-    lock = {
+    const lock = {
       transaction: new NodeFilesystemsTransactionStorage(targetDir),
       finished: new PromiseOut<void>(),
-      queue: this._transactionMap.get(targetDir)?.queue || [],
+      queue: _lock?.queue || [],
     };
     this._transactionMap.set(targetDir, lock);
     lock.finished.onSuccess(() => {
-      this._transactionMap.get(targetDir)?.queue.pop()?.resolve();
+      const resolve = lock.queue.pop()?.resolve;
+      if (resolve === undefined) {
+        this._transactionMap.delete(targetDir);
+      } else {
+        resolve();
+      }
     });
 
     return lock.transaction;
@@ -459,9 +477,14 @@ class NodeFilesystemsStorage
       );
     }
 
-    // await transaction._cacheStore.del([]);
     lock.finished.resolve();
     return true;
+  }
+  requestTransaction<R>(
+    paths: Storage.Paths,
+    cb: (transaction: TransactionStorage) => R,
+  ): Promise<BFChainUtil.PromiseType<R>> {
+    return commonRequestTransaction(this, paths, cb);
   }
   async stopTransaction(transaction: NodeFilesystemsTransactionStorage) {
     const lock = this._transactionMap.get(transaction.sourceTargetDir);
@@ -469,9 +492,12 @@ class NodeFilesystemsStorage
       return false;
     }
 
-    // await transaction._cacheStore.del([]);
     lock.finished.resolve();
     return true;
+  }
+  fork(paths: Storage.Paths): Storage {
+    const forkTargetDir = path.join(this.targetDir, ...paths);
+    return new NodeFilesystemsStorage(forkTargetDir);
   }
 }
 

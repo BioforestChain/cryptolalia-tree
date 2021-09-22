@@ -353,11 +353,13 @@ export class CryptolaliaDataList<D> {
   constructor(
     private config: CryptolaliaConfig,
     private timeHelper: TimeHelper,
-    private storage: Storage,
+    storage: Storage,
     private _branchHanlder: BranchHanlder<D>,
     private _metaHanlder: MetaHanlder<D>,
-  ) {}
-  private _dataListStorage = this.storage.fork(["datalist"]);
+  ) {
+    this._store = storage.fork(["datalist"]);
+  }
+  private _store: Storage;
 
   /**梳理元数据 */
   private async _upsertMetaWhenAddNewItem(
@@ -391,7 +393,7 @@ export class CryptolaliaDataList<D> {
     this._perNow = now;
     const branchId = this.config.calcBranchId(now);
 
-    return this._dataListStorage.requestTransaction([], async (transaction) => {
+    return this._store.requestTransaction([], async (transaction) => {
       // 梳理元数据
       await this._upsertMetaWhenAddNewItem(transaction, branchId);
 
@@ -410,7 +412,7 @@ export class CryptolaliaDataList<D> {
   }
   /**同一时间添加多个元素 */
   addManyItem(datas: Iterable<D>, time = this.timeHelper.now()) {
-    return this._dataListStorage.requestTransaction([], async (transaction) => {
+    return this._store.requestTransaction([], async (transaction) => {
       let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
       let perBranchId = 0;
       const timeList: number[] = [];
@@ -460,7 +462,7 @@ export class CryptolaliaDataList<D> {
     let branchId = this.config.calcBranchId(timestamp);
     do {
       const dataList = await this._branchHanlder.getDataList(
-        this._dataListStorage,
+        this._store,
         branchId,
       );
 
@@ -494,7 +496,7 @@ export class CryptolaliaDataList<D> {
       }
 
       branchWalker ??= this._branchHanlder.BranchIdWalker(
-        this._dataListStorage,
+        this._store,
         branchId,
         order,
       );
