@@ -342,7 +342,7 @@ export class CryptolaliaTimelineTree<D> {
         }[] = [];
         for (let b = start; b <= end; ++b) {
           const hash = await this._getBranchHash(transaction, b, childLevel);
-          if (hash.length === 0 /* EMPTY_SHA256 */) {
+          if (hash.length !== 0 /* EMPTY_SHA256 */) {
             childrenHashList.push({ branchId: b, level: childLevel, hash });
           }
         }
