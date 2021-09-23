@@ -122,7 +122,7 @@ const cryptolalia2 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap2);
   debugger;
   // console.log(await cryptolalia1.timelineTree.getBranchRoute(Date.now()));
   await cryptolalia1.sync.doSync();
-  // await cryptolalia2.sync.doSync();
+  await cryptolalia2.sync.doSync();
 
   // console.group("cryptolalia1");
   // const dataList1 = await cryptolalia1.getMsgList(Date.now());

@@ -2,7 +2,7 @@ import { Injectable } from "@bfchain/util";
 import { CryptoHelper } from "./CryptoHelper";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { MessageHelper } from "./MessageHelper";
-import { Storage, TransactionStorage } from "./Storage";
+import { requestTransaction, Storage, TransactionStorage } from "./Storage";
 
 /**
  * 树状的时间线
@@ -139,19 +139,20 @@ export class CryptolaliaTimelineTree<D> {
     return { branchId };
   }
 
-  addManyLeaf(leafs: Iterable<D>) {
-    return this._store.requestTransaction([], async (transaction) => {
-      const result: Array<{
-        success: BFChainUtil.PromiseReturnType<
-          CryptolaliaTimelineTree<D>["_addLeaf"]
-        >;
-        leaf: D;
-      }> = [];
-      for (const leaf of leafs) {
-        result.push({ success: await this._addLeaf(leaf, transaction), leaf });
-      }
-      return result;
-    });
+  private _trs!: Promise<TransactionStorage>;
+  @requestTransaction([], "_store", "_trs")
+  async addManyLeaf(leafs: Iterable<D>) {
+    const transaction = await this._trs;
+    const result: Array<{
+      success: BFChainUtil.PromiseReturnType<
+        CryptolaliaTimelineTree<D>["_addLeaf"]
+      >;
+      leaf: D;
+    }> = [];
+    for (const leaf of leafs) {
+      result.push({ success: await this._addLeaf(leaf, transaction), leaf });
+    }
+    return result;
   }
 
   getLeafFromBranchData(
@@ -188,11 +189,6 @@ export class CryptolaliaTimelineTree<D> {
     branchId: number,
     level: number,
   ) {
-    // return this._store.requestTransaction(
-    //   ["tree-hash"],
-    //   async (transaction) => {},
-    // );
-
     /// level 0 是最底层的存在，没有子集，所以它不会独立存在，因为形成不了完整的BranchHashInfo，所以只会直接存在于父级。所以我们直接读取父级
     if (level === 0) {
       /// 读取父级HashInfo信息。从里头读取hash缓存；如果发现被标记了变动，那么写入hash缓存
@@ -247,9 +243,9 @@ export class CryptolaliaTimelineTree<D> {
         for (const dirtyBranchId of branchHashInfo.subDirty) {
           const blockHash = await this._getBlockHash(dirtyBranchId);
           if (blockHash.length === 0 /* EMPTY_SHA256 */) {
-            branchHashInfo.subHash.delete(branchId);
+            branchHashInfo.subHash.delete(dirtyBranchId);
           } else {
-            branchHashInfo.subHash.set(branchId, blockHash);
+            branchHashInfo.subHash.set(dirtyBranchId, blockHash);
           }
         }
       } else {
@@ -260,9 +256,9 @@ export class CryptolaliaTimelineTree<D> {
             childLevel,
           );
           if (hash.length === 0 /* EMPTY_SHA256 */) {
-            branchHashInfo.subHash.delete(branchId);
+            branchHashInfo.subHash.delete(dirtyBranchId);
           } else {
-            branchHashInfo.subHash.set(branchId, hash);
+            branchHashInfo.subHash.set(dirtyBranchId, hash);
           }
         }
       }
@@ -293,66 +289,69 @@ export class CryptolaliaTimelineTree<D> {
 
     return branchHashInfo.hash;
   }
+  private _trs_th!: Promise<TransactionStorage>;
   /**获取某一个叶子的枝干路径 */
-  getBranchRoute(leafTime: number) {
-    return this._store.requestTransaction(
-      ["tree-hash"],
-      async (transaction) => {
-        let level = 0;
-        let branchId = this.config.calcBranchId(leafTime);
-        const routeHashList = [
-          {
-            level,
-            branchId,
-            hash: await this._getBranchHash(transaction, branchId, level),
-          },
-        ];
-        while (branchId !== 1) {
-          branchId = this.config.calcNextBranchId(branchId);
-          level += 1;
-          routeHashList.push({
-            level,
-            branchId,
-            hash: await this._getBranchHash(transaction, branchId, level),
-          });
-        }
-        return routeHashList;
+  @requestTransaction(["tree-hash"], "_store", "_trs_th")
+  async getBranchRoute(leafTime: number) {
+    const transaction = await this._trs_th;
+
+    let level = 0;
+    let branchId = this.config.calcBranchId(leafTime);
+    const routeHashList = [
+      {
+        level,
+        branchId,
+        hash: await this._getBranchHash(transaction, branchId, level),
       },
-    );
+    ];
+    while (branchId !== 1) {
+      branchId = this.config.calcNextBranchId(branchId);
+      level += 1;
+      routeHashList.push({
+        level,
+        branchId,
+        hash: await this._getBranchHash(transaction, branchId, level),
+      });
+    }
+    return routeHashList;
   }
   /**获取某一个枝干的直接孩子
    * level必须>=2
    * 因为level == 1 已经是最小的branch了,它是没有children的
    */
-  getBranchChildren(branchId: number, level: number) {
-    return this._store.requestTransaction(
-      ["tree-hash"],
-      async (transaction) => {
-        if (level < 1) {
-          throw new RangeError(
-            `invalid branch level: ${level} when get branch(${branchId})`,
-          );
+  @requestTransaction(["tree-hash"], "_store", "_trs_th")
+  async getBranchChildren(branchId: number, level: number) {
+    const transaction = await this._trs_th;
+
+    if (level < 1) {
+      throw new RangeError(
+        `invalid branch level: ${level} when get branch(${branchId})`,
+      );
+    }
+    const parentBranchHashInfo = await transaction.getJsObject<BranchHashInfo>([
+      `level-${level}`,
+      `branch-${branchId}`,
+    ]);
+
+    const branchChildren: CryptolaliaTimelineTree.BranchChildren = new Map();
+    if (parentBranchHashInfo !== undefined) {
+      const childLevel = level - 1;
+      for (const childBranchId of [
+        ...parentBranchHashInfo.subDirty,
+        ...parentBranchHashInfo.subHash.keys(),
+      ]) {
+        const hash = await this._getBranchHash(
+          transaction,
+          childBranchId,
+          childLevel,
+        );
+        if (hash.length !== 0 /* EMPTY_SHA256 */) {
+          branchChildren.set(childBranchId, hash);
         }
-        const { start, end } = this.config.calcBranchIdRange(branchId);
-        const childLevel = level - 1;
-        const childrenHashList: {
-          branchId: number;
-          level: number;
-          hash: Uint8Array;
-        }[] = [];
-        for (let b = start; b <= end; ++b) {
-          const hash = await this._getBranchHash(transaction, b, childLevel);
-          if (hash.length !== 0 /* EMPTY_SHA256 */) {
-            childrenHashList.push({ branchId: b, level: childLevel, hash });
-          }
-        }
-        return {
-          branchId,
-          level,
-          children: childrenHashList,
-        };
-      },
-    );
+      }
+    }
+
+    return branchChildren;
   }
 }
 
@@ -407,6 +406,13 @@ export declare namespace CryptolaliaTimelineTree {
     indexedDigit: IndexedDigit;
     mapData: Map<bigint | number, D>;
   };
+
+  type BranchChildren = Map<number, Uint8Array>;
+  //   {
+  //   branchId: number;
+  //   level: number;
+  //   hash: Uint8Array;
+  // }[];
 }
 const EMPTY_SHA256 = new Uint8Array(0);
 

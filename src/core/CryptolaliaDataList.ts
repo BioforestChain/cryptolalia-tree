@@ -2,7 +2,7 @@ import { TimeHelper } from "#TimeHelper";
 import { Injectable, PromiseOut } from "@bfchain/util";
 import { getJsObject } from "./core";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
-import { Storage, TransactionStorage } from "./Storage";
+import { requestTransaction, Storage, TransactionStorage } from "./Storage";
 
 const compareUp = (t1: number, t2: number) => (t1 < t2 ? -1 : t1 > t2 ? 1 : 0);
 const compareDown = (t1: number, t2: number) =>
@@ -386,75 +386,70 @@ export class CryptolaliaDataList<D> {
     }
   }
 
+  private _trs!: Promise<TransactionStorage>;
   private _perNow = 0;
   /**添加元素 */
-  addItem(data: D, time = this.timeHelper.now()) {
+  @requestTransaction([], "_store", "_trs")
+  async addItem(data: D, time = this.timeHelper.now()) {
     const now = this.timeHelper.max(this._perNow + 1, time);
     this._perNow = now;
     const branchId = this.config.calcBranchId(now);
 
-    return this._store.requestTransaction([], async (transaction) => {
-      // 梳理元数据
-      await this._upsertMetaWhenAddNewItem(transaction, branchId);
+    const transaction = await this._trs;
 
-      const dataList = await this._branchHanlder.getDataList(
-        transaction,
-        branchId,
-      );
+    // 梳理元数据
+    await this._upsertMetaWhenAddNewItem(transaction, branchId);
+
+    const dataList = await this._branchHanlder.getDataList(
+      transaction,
+      branchId,
+    );
+    dataList.push({
+      insertTime: now,
+      data: data,
+    });
+    await this._branchHanlder.setDataList(transaction, branchId, dataList);
+
+    return time;
+  }
+  /**同一时间添加多个元素 */
+  @requestTransaction([], "_store", "_trs")
+  async addManyItem(datas: Iterable<D>, time = this.timeHelper.now()) {
+    const transaction = await this._trs;
+    let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
+    let perBranchId = 0;
+    const timeList: number[] = [];
+    for (const data of datas) {
+      const now = this.timeHelper.max(this._perNow + 1, time);
+      timeList.push(now);
+      this._perNow = now;
+      const branchId = this.config.calcBranchId(now);
+      if (branchId !== perBranchId) {
+        perBranchId = branchId;
+        // 梳理元数据
+        await this._upsertMetaWhenAddNewItem(transaction, branchId);
+        if (dataList) {
+          await this._branchHanlder.setDataList(
+            transaction,
+            branchId,
+            dataList,
+          );
+          dataList = undefined;
+        }
+      }
+      if (dataList === undefined) {
+        dataList = await this._branchHanlder.getDataList(transaction, branchId);
+      }
       dataList.push({
         insertTime: now,
         data: data,
       });
-      await this._branchHanlder.setDataList(transaction, branchId, dataList);
+    }
 
-      return time;
-    });
-  }
-  /**同一时间添加多个元素 */
-  addManyItem(datas: Iterable<D>, time = this.timeHelper.now()) {
-    return this._store.requestTransaction([], async (transaction) => {
-      let dataList: Array<CryptolaliaDataList.DataItem<D>> | undefined;
-      let perBranchId = 0;
-      const timeList: number[] = [];
-      for (const data of datas) {
-        const now = this.timeHelper.max(this._perNow + 1, time);
-        timeList.push(now);
-        this._perNow = now;
-        const branchId = this.config.calcBranchId(now);
-        if (branchId !== perBranchId) {
-          perBranchId = branchId;
-          // 梳理元数据
-          await this._upsertMetaWhenAddNewItem(transaction, branchId);
-          if (dataList) {
-            await this._branchHanlder.setDataList(
-              transaction,
-              branchId,
-              dataList,
-            );
-            dataList = undefined;
-          }
-        }
-        if (dataList === undefined) {
-          dataList = await this._branchHanlder.getDataList(
-            transaction,
-            branchId,
-          );
-        }
-        dataList.push({
-          insertTime: now,
-          data: data,
-        });
-      }
-
-      if (dataList) {
-        await this._branchHanlder.setDataList(
-          transaction,
-          perBranchId,
-          dataList,
-        );
-      }
-      return timeList;
-    });
+    if (dataList) {
+      await this._branchHanlder.setDataList(transaction, perBranchId, dataList);
+    }
+    return timeList;
   }
   /**从某一个时间点开始读取数据 */
   async *ItemReader(timestamp: number, order = ORDER.UP) {

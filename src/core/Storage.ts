@@ -1,4 +1,4 @@
-import { Injectable, Resolvable } from "@bfchain/util";
+import { Injectable, PromiseOut, Resolvable } from "@bfchain/util";
 
 @Injectable()
 export abstract class StorageBase {
@@ -60,6 +60,38 @@ export const commonRequestTransaction = async <R>(
     await storage.stopTransaction(transaction);
     throw err;
   }
+};
+
+export const requestTransaction = (
+  paths: Storage.Paths,
+  inProp: string,
+  outProp: string,
+) => {
+  return (target: any, methodProp: string, description: PropertyDescriptor) => {
+    const source_fun = description.value;
+    if (typeof source_fun !== "function") {
+      throw new TypeError();
+    }
+    const requestTransactionWrapped = async function (
+      this: any,
+      ...args: unknown[]
+    ) {
+      const trsP = new PromiseOut<TransactionStorage>();
+      this[outProp] = trsP.promise;
+      /// 立即执行，而不是放在requestTransaction回调中，以确保一些参数的初始化时机是遵循原来的
+      const res = source_fun.apply(this, args);
+      return (this[inProp] as Storage).requestTransaction(
+        paths,
+        (transaction) => {
+          trsP.resolve(transaction);
+          return res;
+        },
+      );
+    };
+    Reflect.set(requestTransactionWrapped, "source", source_fun);
+    description.value = requestTransactionWrapped;
+    return description;
+  };
 };
 
 export abstract class TransactionStorage extends StorageBase {}

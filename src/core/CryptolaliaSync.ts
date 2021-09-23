@@ -1,6 +1,9 @@
 import { TimeHelper } from "#TimeHelper";
-import { Injectable, Inject, PromiseOut, ModuleStroge } from "@bfchain/util";
+import { Inject, Injectable, PromiseOut } from "@bfchain/util";
+import { addManyMsg, addMsg, CryptolaliaCore } from "./core";
+import { CryptolaliaDataList } from "./CryptolaliaDataList";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
+import { MessageHelper } from "./MessageHelper";
 
 const ARGS = {
   SYNC_CHANNE: Symbol("syncChannnel"),
@@ -15,8 +18,9 @@ export class CryptolaliaSync<D = unknown> {
     @Inject(ARGS.SYNC_CHANNE)
     private syncChannel: CryptolaliaSync.Channel<D>,
     private timelineTree: CryptolaliaTimelineTree<D>,
+    private dataList: CryptolaliaDataList<CryptolaliaCore.RawDataItem>,
     private timeHelper: TimeHelper,
-    private moduleMap: ModuleStroge,
+    private msgHelper: MessageHelper<D>,
   ) {
     /// 监听数据请求，提供数据响应服务
     syncChannel.onMessage((data) => {
@@ -96,6 +100,8 @@ export class CryptolaliaSync<D = unknown> {
             break;
           case SYNC_MSG_CMD.DOWNLOAD_BY_BRANCHID:
             {
+              const res = await this.timelineTree.getBranchData(args.branchId);
+              this.syncChannel.postMessage([reqId, res]);
             }
             break;
           default:
@@ -151,22 +157,173 @@ export class CryptolaliaSync<D = unknown> {
       this.syncChannel.postMessage([reqId, msg]);
     });
   }
-  async doSync() {
-    const now = this.timeHelper.now();
-    const localeBranchRoute = await this.timelineTree.getBranchRoute(now);
-    console.log("localeBranchRoute", localeBranchRoute);
 
-    const remoteBranchRoute = await this.requestMessage({
-      cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE,
-      leafTime: now,
-    });
+  /**
+   * 单方面同步对方节点的数据
+   * @tip 这里同步并不是要实现两边完全一致。因为我们无法强制让对方下载我们的数据，而只能让自己的数据尽可能完整
+   * @tip 所以在这里，如果对方不进行协同同步，会导致每一次比对数据的成本其实是非常高的。因为我并不知道对方数据与我为什么不一致，只能尽可能地下载对面的数据过来比对。
+   * @todo 实现双方协同同步算法，让两边同时完成同步，减少不必要的损耗
+   */
+  async doSync(now = this.timeHelper.now()) {
+    const { msgHelper, timelineTree, dataList } = this;
+    const ignores = new SyncIgnores();
+    sync: do {
+      const localeBranchRoute = await timelineTree.getBranchRoute(now);
 
-    console.log("remoteBranchRoute", remoteBranchRoute);
+      const remoteBranchRoute = await this.requestMessage({
+        cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE,
+        leafTime: now,
+      });
 
-    /// 对比两端的BranchRoute，从low-level到high-level进行同步
-    for(let i = 0;i<localeBranchRoute.length;i++){
-        
+      /// 对比两端的BranchRoute，从 low-level 到 high-level 进行同步， top-level 其实就意味着全部数据，希望不要走到这一步，不然要同步的数据可能很多
+      localeBranchRoute.sort((a, b) => a.level - b.level);
+      remoteBranchRoute.sort((a, b) => a.level - b.level);
+
+      // console.log("localeBranchRoute", localeBranchRoute);
+      // console.log("remoteBranchRoute", remoteBranchRoute);
+
+      for (let i = 0; i < localeBranchRoute.length; i++) {
+        const localeBranch = localeBranchRoute[i];
+        const remoteBranch = remoteBranchRoute[i];
+
+        const {
+          branchId: remoteBranchId,
+          level: remoteLevel,
+          hash: remoteHash,
+        } = remoteBranch;
+        if (
+          localeBranch.branchId !== remoteBranchId ||
+          localeBranch.level !== remoteLevel
+        ) {
+          throw new Error(
+            `invalid remote branch info: ${remoteLevel}(level)/${remoteBranchId}/(branchId) when ${new Date(
+              now,
+            ).toLocaleString()}`,
+          );
+        }
+        //#region 从低分支到高分支，找到开始分叉的分支并同步
+
+        if (
+          // 如果远端没有数据，直接跳过，无需同步
+          remoteHash.length === 0 ||
+          // 签名一致，无需同步
+          msgHelper.signIsSign(localeBranch.hash, remoteHash)
+        ) {
+          continue;
+        }
+
+        if (
+          await this._syncBranch(
+            msgHelper,
+            timelineTree,
+            dataList,
+            remoteBranchId,
+            remoteLevel,
+            ignores,
+          )
+        ) {
+          // 每深度同步一次，发生了改动的话，就重新计算hash并比对
+          continue sync;
+        }
+        //#endregion
+      }
+      // 走到这里，就意味着branchroute完全一致了
+      break;
+    } while (true);
+  }
+
+  /**
+   *
+   * @param msgHelper
+   * @param timelineTree
+   * @param dataList
+   * @param branchId
+   * @param level
+   * @returns 本地数据是否发生了改变？
+   */
+  private async _syncBranch(
+    msgHelper: MessageHelper<D>,
+    timelineTree: CryptolaliaTimelineTree<D>,
+    dataList: CryptolaliaDataList<CryptolaliaCore.RawDataItem>,
+    branchId: number,
+    level: number,
+    ignores: SyncIgnores,
+  ): Promise<boolean> {
+    // 被列入忽略名单，已经通过过，本次任务内无需再同步
+    if (ignores.has(branchId, level)) {
+      return false;
     }
+
+    if (level === 0) {
+      const remoteBranchData = await this.requestMessage({
+        cmd: SYNC_MSG_CMD.DOWNLOAD_BY_BRANCHID,
+        branchId: branchId,
+      });
+      if (remoteBranchData === undefined) {
+        /// 数据空了？可能对方删除了数据？
+        return false;
+      }
+
+      /// 写入远端的数据（会自动合并本地数据）
+      const result = await addManyMsg(
+        msgHelper,
+        timelineTree,
+        dataList,
+        remoteBranchData.mapData.values(),
+      );
+      return result.some(Boolean);
+    }
+
+    /// level !== 0
+    const remoteBranchChildren = await this.requestMessage({
+      cmd: SYNC_MSG_CMD.GET_BRANCH_CHILDREN,
+      branchId: branchId,
+      level: level,
+    });
+    const localBranchChildren = await timelineTree.getBranchChildren(
+      branchId,
+      level,
+    );
+
+    /// 找出差集
+    for (const [branchId, remoteHash] of remoteBranchChildren) {
+      const localeHash = localBranchChildren.get(branchId);
+      if (localeHash && msgHelper.signIsSign(remoteHash, localeHash)) {
+        remoteBranchChildren.delete(branchId); // 删除掉一样hash的
+      }
+    }
+    // console.log("diffBranchChildren", remoteBranchChildren);
+    let hasChanged = false;
+    for (const diffBranchId of remoteBranchChildren.keys()) {
+      hasChanged ||= await this._syncBranch(
+        msgHelper,
+        timelineTree,
+        dataList,
+        diffBranchId,
+        level - 1,
+        ignores,
+      );
+    }
+
+    return hasChanged;
+  }
+}
+
+class SyncIgnores {
+  private _s = new Map<number, Set<number>>();
+  add(branchId: number, level: number) {
+    let ls = this._s.get(level);
+    if (ls === undefined) {
+      this._s.set(level, (ls = new Set()));
+    }
+    ls.add(branchId);
+  }
+  has(branchId: number, level: number) {
+    const ls = this._s.get(level);
+    if (ls !== undefined) {
+      return ls.has(branchId);
+    }
+    return false;
   }
 }
 
@@ -233,7 +390,8 @@ class Sequencer<T, I = unknown> {
     if (this._queue.size === 0) {
       return (this._waitter = new PromiseOut()).promise;
     }
-    for (const task of this._queue.values()) {
+    for (const [key, task] of this._queue) {
+      this._queue.delete(key);
       return task;
     }
     throw 1;
