@@ -25,7 +25,7 @@
   },
   "scripts": {
     "postinstall": "node ./scripts/fix-package.js",
-    "dev": "vite build --watch --minify=false",
+    "dev": "vite build --watch --minify=false --mode=development",
     "clear": "rm -r types/* dist/*",
     "build": "tsc && vite build",
     "vite": "vite"

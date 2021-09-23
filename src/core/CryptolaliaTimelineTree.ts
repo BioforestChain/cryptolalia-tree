@@ -355,6 +355,9 @@ export class CryptolaliaTimelineTree<D> {
   }
 }
 
+/**
+ * @TODO 这里的排序缺失了对sign的签名排序，否则在时间错一致的情况下，key会出现一致，同样的key会导致数据写入失败。最终导致数据不一致
+ */
 export class OrderMap<T> extends Map<bigint | number, T> {
   get [Symbol.toStringTag]() {
     return "OrderMap";
