@@ -1,21 +1,18 @@
 import { Inject, PromiseOut } from "@bfchain/util";
-import { OrderMap } from "../core/CryptolaliaTimelineTree";
+import * as idb from "idb";
+import { openDB } from "idb";
 import {
   commonRequestTransaction,
   Storage,
   StorageBase,
   TransactionStorage,
 } from "../core/Storage";
-
 import {
-  deserialize,
-  serialize,
-  MemoryFilesystemsStorageBase,
   Del,
+  deserialize,
+  MemoryFilesystemsStorageBase,
+  serialize,
 } from "./storageHelper";
-
-import { openDB } from "idb";
-import * as idb from "idb";
 
 const enum CONST {
   PATH_SEP = "/",

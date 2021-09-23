@@ -10,7 +10,7 @@ import { TimeHelper } from "./TimeHelper";
 import { CryptolaliaCore, addMsg } from "./core";
 
 @Injectable()
-export default class Cryptolalia<D> {
+export class Cryptolalia<D> {
   constructor(
     private msgHelper: MessageHelper<D>,
     readonly config: CryptolaliaConfig,

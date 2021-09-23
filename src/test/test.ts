@@ -4,7 +4,7 @@ import { TimeHelper } from "#TimeHelper";
 import { ModuleStroge, Resolve, sleep } from "@bfchain/util";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import Cryptolalia from "../core/Cryptolalia";
+import { Cryptolalia } from "../core/Cryptolalia";
 import { MessageHelper } from "../core/MessageHelper";
 import { CryptolaliaConfig } from "../core/CryptolaliaConfig";
 import { CryptolaliaSync } from "../core/CryptolaliaSync";

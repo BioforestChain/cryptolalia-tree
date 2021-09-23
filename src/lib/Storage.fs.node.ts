@@ -10,10 +10,10 @@ import {
   TransactionStorage,
 } from "../core/Storage";
 import {
-  deserialize,
-  serialize,
-  MemoryFilesystemsStorageBase,
   Del,
+  deserialize,
+  MemoryFilesystemsStorageBase,
+  serialize,
 } from "./storageHelper";
 
 const ARGS = {
