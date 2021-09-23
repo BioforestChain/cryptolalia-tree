@@ -1,5 +1,5 @@
 import { CryptoHelper } from "#CryptoHelper";
-import { FilesystemsStorage } from "#Storage.fs";
+import { FilesystemStorage } from "#Storage.fs";
 import { TimeHelper } from "#TimeHelper";
 import { ModuleStroge, Resolve, sleep } from "@bfchain/util";
 import { createHash } from "node:crypto";
@@ -62,7 +62,7 @@ const moduleMap1 = new ModuleStroge(
 );
 {
   env.FSS_DIR = path.join(cwd(), "./.cache/fs/1");
-  Resolve(FilesystemsStorage, moduleMap1);
+  Resolve(FilesystemStorage, moduleMap1);
 }
 
 const moduleMap2 = new ModuleStroge(
@@ -71,7 +71,7 @@ const moduleMap2 = new ModuleStroge(
 );
 {
   env.FSS_DIR = path.join(cwd(), "./.cache/fs/2");
-  Resolve(FilesystemsStorage, moduleMap2);
+  Resolve(FilesystemStorage, moduleMap2);
 }
 const cryptolalia1 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap1);
 const cryptolalia2 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap2);
@@ -80,7 +80,7 @@ const cryptolalia2 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap2);
   await cryptolalia1.storage.del([]);
   await cryptolalia2.storage.del([]);
 
-  // console.log(getInjectionToken(FilesystemsStorage));
+  // console.log(getInjectionToken(FilesystemStorage));
   // console.log(Reflect.getMetadata("design:paramtypes", Storage));
 
   // console.log(cryptolalia1.timelineTree.storage.targetDir);

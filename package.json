@@ -17,10 +17,12 @@
       "default": "./src/lib/TimeHelper.web.ts"
     },
     "#CryptoHelper": {
-      "node": "./src/lib/CryptoHelper.node.ts"
+      "node": "./src/lib/CryptoHelper.node.ts",
+      "default": "./src/lib/CryptoHelper.web.ts"
     },
     "#Storage.fs": {
-      "node": "./src/lib/Storage.fs.node.ts"
+      "node": "./src/lib/Storage.fs.node.ts",
+      "default": "./src/lib/Storage.indexeddb.ts"
     }
   },
   "scripts": {
@@ -41,6 +43,7 @@
   "dependencies": {
     "@bfchain/util": "^0.0.1-alpha.4",
     "@types/node": "^16.9.1",
+    "idb": "^6.1.4",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {

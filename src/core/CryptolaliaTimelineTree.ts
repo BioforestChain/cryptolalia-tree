@@ -394,6 +394,14 @@ export class OrderMap<T> extends Map<bigint | number, T> {
   [Symbol.iterator]() {
     return this.entries();
   }
+  toMap() {
+    return new Map(this);
+  }
+  static fromMap<T>(map: Map<number | bigint, T>) {
+    const orderMap = new OrderMap(map);
+    orderMap._okl = [...map.keys()].sort();
+    return orderMap;
+  }
 }
 
 const getLowIndexe = (

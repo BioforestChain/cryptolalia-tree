@@ -50,9 +50,11 @@
         "./src/lib/TimeHelper.node.ts",
       ],
       "#CryptoHelper": [
+        "./src/lib/CryptoHelper.web.ts",
         "./src/lib/CryptoHelper.node.ts",
       ],
       "#Storage.fs": [
+        "./src/lib/Storage.fs.web.ts",
         "./src/lib/Storage.fs.node.ts",
       ]
     }, /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
@@ -83,8 +85,11 @@
     "./src/core/TimeHelper.ts",
     "./src/core/Storage.ts",
     "./src/lib/Storage.fs.node.ts",
+    "./src/lib/Storage.fs.web.ts",
     "./src/lib/TimeHelper.node.ts",
     "./src/lib/TimeHelper.web.ts",
+    "./src/lib/CryptoHelper.node.ts",
+    "./src/lib/CryptoHelper.web.ts",
     "./src/test/test.ts",
     "./src/core/CryptolaliaConfig.ts",
     "./src/core/CryptoHelper.ts",
