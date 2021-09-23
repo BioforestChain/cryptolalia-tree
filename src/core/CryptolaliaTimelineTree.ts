@@ -46,7 +46,7 @@ export class CryptolaliaTimelineTree<D> {
         level0Path,
       )) || {
         indexedDigit: 8,
-        mapData: new Map(),
+        mapData: new OrderMap(),
       };
     const sign = messageHelper.getSignature(leaf);
 
@@ -355,6 +355,44 @@ export class CryptolaliaTimelineTree<D> {
   }
 }
 
+export class OrderMap<T> extends Map<bigint | number, T> {
+  get [Symbol.toStringTag]() {
+    return "OrderMap";
+  }
+  private _okl: (bigint | number)[] = [];
+  set(key: bigint | number, value: T) {
+    if (Number.isNaN(key)) {
+      throw new TypeError("order-map's key must be finite number");
+    }
+    const size = this.size;
+    super.set(key, value);
+    if (this.size !== size) {
+      this._okl.push(key);
+      this._okl.sort();
+    }
+    return this;
+  }
+  delete(key: bigint | number) {
+    if (super.delete(key)) {
+      this._okl.splice(this._okl.indexOf(key));
+      return true;
+    }
+    return false;
+  }
+  keys() {
+    return this._okl[Symbol.iterator]();
+  }
+  /**这里与map的迭代不大一样，map在迭代的过程中，可以del与set，也能保证顺序正常，这里逻辑上无法保证 */
+  *entries() {
+    for (const key of this._okl) {
+      yield [key, this.get(key) as T] as [bigint | number, T];
+    }
+  }
+  [Symbol.iterator]() {
+    return this.entries();
+  }
+}
+
 const getLowIndexe = (
   sign: Uint8Array,
   indexedDigit: IndexedDigit.Low,
@@ -404,7 +442,7 @@ const getIndexe = (
 export declare namespace CryptolaliaTimelineTree {
   type BranchData<D> = {
     indexedDigit: IndexedDigit;
-    mapData: Map<bigint | number, D>;
+    mapData: OrderMap<D>;
   };
 
   type BranchChildren = Map<number, Uint8Array>;

@@ -6,6 +6,7 @@ import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { cwd, env } from "node:process";
+import { OrderMap } from "../core/CryptolaliaTimelineTree";
 import {
   commonRequestTransaction,
   Storage,
@@ -13,15 +14,18 @@ import {
   TransactionStorage,
 } from "../core/Storage";
 
-const schema = yaml.DEFAULT_SCHEMA.extend([
-  new Type("tag:bfchain.org,2021:js/map", {
+const mapLikeTypeConstructorOptionsFactory = (
+  MapCtor: typeof Map,
+): yaml.TypeConstructorOptions => {
+  const toStringTag = MapCtor.prototype[Symbol.toStringTag];
+  return {
     kind: "sequence",
     resolve(data) {
       if (data === null) return true;
       return data.length % 2 === 0;
     },
     construct(data) {
-      const result = new Map();
+      const result = new MapCtor();
       for (let i = 0; i < data.length; i += 2) {
         result.set(data[i], data[i + 1]);
       }
@@ -29,8 +33,8 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
       return result;
     },
     represent(data) {
-      if (!(data instanceof Map)) {
-        throw new TypeError("no an map");
+      if (!(data instanceof MapCtor)) {
+        throw new TypeError(`no an ${toStringTag}`);
       }
       const result = new Array(data.size * 2);
       let i = 0;
@@ -42,9 +46,21 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
       return result;
     },
     predicate(data) {
-      return data instanceof Map;
+      return (
+        data instanceof MapCtor && data[Symbol.toStringTag] === toStringTag
+      );
     },
-  }),
+  };
+};
+const schema = yaml.DEFAULT_SCHEMA.extend([
+  new Type(
+    "tag:bfchain.org,2021:js/ordermap",
+    mapLikeTypeConstructorOptionsFactory(OrderMap),
+  ),
+  new Type(
+    "tag:bfchain.org,2021:js/map",
+    mapLikeTypeConstructorOptionsFactory(Map),
+  ),
   new Type("tag:bfchain.org,2021:js/set", {
     kind: "sequence",
     resolve(data) {
@@ -65,7 +81,7 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
       return [...data];
     },
     predicate(data) {
-      return data instanceof Set;
+      return data instanceof Set && data[Symbol.toStringTag] === "Set";
     },
   }),
 ]);
