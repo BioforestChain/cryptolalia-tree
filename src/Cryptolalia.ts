@@ -27,9 +27,13 @@ export class Cryptolalia<D> {
 
   async getMsgList(
     timestamp: number,
-    options: { offset?: number; limit?: number; order?: ORDER } = {},
+    query: {
+      offset?: number;
+      limit?: number;
+      order?: ORDER;
+    } = {},
   ) {
-    const { offset = 0, limit = 40, order = ORDER.DOWN } = options;
+    const { offset = 0, limit = 40, order = ORDER.DOWN } = query;
 
     const rawDataList: CryptolaliaDataList.DataItem<CryptolaliaCore.RawDataItem>[] =
       [];

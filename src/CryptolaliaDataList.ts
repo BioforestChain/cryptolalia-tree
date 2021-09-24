@@ -362,29 +362,33 @@ export class CryptolaliaDataList<D> {
   }
   private _store: Storage;
 
-  /**梳理元数据 */
+  /**梳理元数据
+   *  @TODO 这里只考虑了branchId递增的情况，如果branchId是半途插入的，那么理论上是不允许的，比如用户修改了系统时间引发了这样的情况。或者我们需要对这种情况做特殊处理
+   */
   private async _upsertMetaWhenAddNewItem(
     transaction: TransactionStorage,
     branchId: number,
   ) {
     const meta = await this._metaHanlder.getMeta(transaction);
+    let preBranchId = 0;
     if (meta.firstBranchId === 0) {
       meta.firstBranchId = branchId;
       meta.secondLastBranchId = branchId;
       meta.lastBranchId = branchId;
-      await this._metaHanlder.setMeta(transaction, meta);
-    } else if (meta.lastBranchId !== branchId) {
-      const preBranchId = (meta.secondLastBranchId = meta.lastBranchId);
+    } else if (meta.lastBranchId < branchId) {
+      preBranchId = meta.secondLastBranchId = meta.lastBranchId;
       meta.lastBranchId = branchId;
-      await this._metaHanlder.setMeta(transaction, meta);
+    }
+    await this._metaHanlder.setMeta(transaction, meta);
+    if (preBranchId !== 0) {
       await this._branchHanlder.upsertBranchMeta(transaction, preBranchId, {
         nextBranchId: branchId,
       });
-      await this._branchHanlder.setBranchMeta(transaction, branchId, {
-        preBranchId,
-        nextBranchId: branchId,
-      });
     }
+    await this._branchHanlder.setBranchMeta(transaction, branchId, {
+      preBranchId,
+      nextBranchId: branchId,
+    });
   }
 
   private _trs!: Promise<TransactionStorage>;
@@ -398,7 +402,7 @@ export class CryptolaliaDataList<D> {
 
     const transaction = await this._trs;
 
-    // 梳理元数据
+    // 插入元数据
     await this._upsertMetaWhenAddNewItem(transaction, branchId);
 
     const dataList = await this._branchHanlder.getDataList(
@@ -426,18 +430,20 @@ export class CryptolaliaDataList<D> {
       this._perNow = now;
       const branchId = this.config.calcBranchId(now);
       if (branchId !== perBranchId) {
-        perBranchId = branchId;
-        // 梳理元数据
+        // 插入元数据
         await this._upsertMetaWhenAddNewItem(transaction, branchId);
-        if (dataList) {
+        if (dataList !== undefined) {
+          // 即将切换branchId，如果dataList缓存不为空，那么保存起来
           await this._branchHanlder.setDataList(
             transaction,
-            branchId,
+            perBranchId,
             dataList,
           );
           dataList = undefined;
         }
+        perBranchId = branchId;
       }
+      ///
       if (dataList === undefined) {
         dataList = await this._branchHanlder.getDataList(transaction, branchId);
       }
