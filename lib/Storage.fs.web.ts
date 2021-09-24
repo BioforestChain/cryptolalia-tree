@@ -191,6 +191,7 @@ class IDBFileSystem {
     if (fileInfo.fid !== -1) {
       await fileStore.delete(fileInfo.fid);
     }
+    fileInfo.fid = fileHanlderId;
 
     /// 更新目录下的元数据信息
     await dirStore.put(dirInfoMap, dirname);
@@ -393,7 +394,7 @@ class IndexeddbFilesystemStorageBase extends StorageBase {
   async getJsObject<T>(paths: Storage.Paths) {
     const binary = await this.getBinary(paths);
     if (binary) {
-      return deserialize(binary);
+      return deserialize<T>(binary);
     }
   }
   setJsObject<T>(paths: Storage.Paths, data: T) {
@@ -459,12 +460,12 @@ class IndexeddbFilesystemTransactionStorage extends StorageBase {
   }
   async getJsObject<T>(paths: Storage.Paths) {
     if (await this._cacheStore.has(paths)) {
-      return await this._cacheStore.getJsObject(paths);
+      return await this._cacheStore.getJsObject<T>(paths);
     }
     if (this._del.isDel(paths)) {
       return undefined;
     }
-    return await this._targetStore.getJsObject(paths);
+    return await this._targetStore.getJsObject<T>(paths);
   }
   setJsObject<T>(paths: Storage.Paths, data: T) {
     return this._cacheStore.setJsObject(paths, data);

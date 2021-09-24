@@ -75,11 +75,12 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
     },
   }),
 ]);
+
+const textDecoder = new TextDecoder();
 export const deserialize = <T = unknown>(binary: Uint8Array) =>
-  yaml.load(binary.toString(), { schema }) as any;
+  yaml.load(textDecoder.decode(binary), { schema }) as T;
 
 const textEncoder = new TextEncoder();
-
 export const serialize = (obj: any) =>
   textEncoder.encode(yaml.dump(obj, { schema }));
 //#endregion

@@ -52,7 +52,7 @@ class NodeFilesystemStorageBase extends StorageBase {
   async getJsObject<T>(paths: Storage.Paths) {
     const binary = await this.getBinary(paths);
     if (binary) {
-      return deserialize(binary);
+      return deserialize<T>(binary);
     }
   }
   setJsObject<T>(paths: Storage.Paths, data: T) {
@@ -115,12 +115,12 @@ class NodeFilesystemTransactionStorage extends StorageBase {
   }
   async getJsObject<T>(paths: Storage.Paths) {
     if (await this._cacheStore.has(paths)) {
-      return await this._cacheStore.getJsObject(paths);
+      return await this._cacheStore.getJsObject<T>(paths);
     }
     if (this._del.isDel(paths)) {
       return undefined;
     }
-    return await this._targetStore.getJsObject(paths);
+    return await this._targetStore.getJsObject<T>(paths);
   }
   setJsObject<T>(paths: Storage.Paths, data: T) {
     return this._cacheStore.setJsObject(paths, data);
