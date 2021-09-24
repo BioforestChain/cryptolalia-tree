@@ -1,4 +1,5 @@
-import { bindThis, Injectable } from "@bfchain/util";
+import { Injectable } from "@bfchain/util-dep-inject";
+import { addMsg, CryptolaliaCore } from "./core";
 import { CryptolaliaAssets } from "./CryptolaliaAssets";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { CryptolaliaDataList, ORDER } from "./CryptolaliaDataList";
@@ -7,7 +8,6 @@ import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { MessageHelper } from "./MessageHelper";
 import { Storage } from "./Storage";
 import { TimeHelper } from "./TimeHelper";
-import { CryptolaliaCore, addMsg } from "./core";
 
 @Injectable()
 export class Cryptolalia<D> {

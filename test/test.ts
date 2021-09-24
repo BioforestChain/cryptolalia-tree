@@ -1,13 +1,13 @@
 import { CryptoHelper } from "#CryptoHelper";
 import { FilesystemStorage } from "#Storage.fs";
 import { TimeHelper } from "#TimeHelper";
-import { ModuleStroge, Resolve, sleep } from "@bfchain/util";
+import { ModuleStroge, Resolve } from "@bfchain/util-dep-inject";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { Cryptolalia } from "../core/Cryptolalia";
-import { MessageHelper } from "../core/MessageHelper";
-import { CryptolaliaConfig } from "../core/CryptolaliaConfig";
-import { CryptolaliaSync } from "../core/CryptolaliaSync";
+import { Cryptolalia } from "../src/Cryptolalia";
+import { MessageHelper } from "../src/MessageHelper";
+import { CryptolaliaConfig } from "../src/CryptolaliaConfig";
+import { CryptolaliaSync } from "../src/CryptolaliaSync";
 
 const moduleMap = new ModuleStroge();
 {

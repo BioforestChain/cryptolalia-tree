@@ -1,4 +1,5 @@
-import { Injectable, PromiseOut, Resolvable } from "@bfchain/util";
+import { Injectable } from "@bfchain/util-dep-inject";
+import { PromiseOut } from "@bfchain/util-extends-promise-out";
 
 @Injectable()
 export abstract class StorageBase {

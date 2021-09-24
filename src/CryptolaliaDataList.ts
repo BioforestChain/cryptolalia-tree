@@ -1,5 +1,6 @@
 import { TimeHelper } from "#TimeHelper";
-import { Injectable, PromiseOut } from "@bfchain/util";
+import { Injectable } from "@bfchain/util-dep-inject";
+import { PromiseOut } from "@bfchain/util-extends-promise-out";
 import { getJsObject } from "./core";
 import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { requestTransaction, Storage, TransactionStorage } from "./Storage";

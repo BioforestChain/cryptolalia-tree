@@ -1,7 +1,7 @@
 import {
   CryptoHelper as AbstractCryptoHelper,
   HashBuilder as AbstractHashBuilder,
-} from "../core/CryptoHelper";
+} from "../src/CryptoHelper";
 
 export class CryptoHelper extends AbstractCryptoHelper {
   async sha256Binary(binary: Uint8Array) {

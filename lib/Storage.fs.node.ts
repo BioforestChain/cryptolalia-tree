@@ -1,4 +1,5 @@
-import { Inject, PromiseOut } from "@bfchain/util";
+import { Inject } from "@bfchain/util-dep-inject";
+import { PromiseOut } from "@bfchain/util-extends-promise-out";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -8,7 +9,7 @@ import {
   Storage,
   StorageBase,
   TransactionStorage,
-} from "../core/Storage";
+} from "../src/Storage";
 import {
   Del,
   deserialize,

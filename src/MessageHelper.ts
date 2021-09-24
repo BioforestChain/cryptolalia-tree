@@ -1,4 +1,4 @@
-import { Injectable } from "@bfchain/util";
+import { Injectable } from "@bfchain/util-dep-inject";
 
 @Injectable()
 /**

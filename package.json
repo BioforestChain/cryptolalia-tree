@@ -17,6 +17,16 @@
       "import": "./dist/es/CryptoHelper.web.mjs",
       "require": "./dist/cjs/CryptoHelper.web.cjs"
     },
+    "./lib/CryptoHelper": {
+      "node": {
+        "import": "./dist/es/CryptoHelper.node.mjs",
+        "require": "./dist/cjs/CryptoHelper.node.cjs"
+      },
+      "default": {
+        "import": "./dist/es/CryptoHelper.web.mjs",
+        "require": "./dist/cjs/CryptoHelper.web.cjs"
+      }
+    },
     "./lib/Storage.fs.node": {
       "import": "./dist/es/Storage.fs.node.mjs",
       "require": "./dist/cjs/Storage.fs.node.cjs"
@@ -25,6 +35,16 @@
       "import": "./dist/es/Storage.fs.web.mjs",
       "require": "./dist/cjs/Storage.fs.web.cjs"
     },
+    "./lib/Storage.fs": {
+      "node": {
+        "import": "./dist/es/Storage.fs.node.mjs",
+        "require": "./dist/cjs/Storage.fs.node.cjs"
+      },
+      "default": {
+        "import": "./dist/es/Storage.fs.web.mjs",
+        "require": "./dist/cjs/Storage.fs.web.cjs"
+      }
+    },
     "./lib/TimeHelper.node": {
       "import": "./dist/es/TimeHelper.node.mjs",
       "require": "./dist/cjs/TimeHelper.node.cjs"
@@ -32,48 +52,59 @@
     "./lib/TimeHelper.web": {
       "import": "./dist/es/TimeHelper.web.mjs",
       "require": "./dist/cjs/TimeHelper.web.cjs"
+    },
+    "./lib/TimeHelper": {
+      "node": {
+        "import": "./dist/es/TimeHelper.node.mjs",
+        "require": "./dist/cjs/TimeHelper.node.cjs"
+      },
+      "default": {
+        "import": "./dist/es/TimeHelper.web.mjs",
+        "require": "./dist/cjs/TimeHelper.web.cjs"
+      }
     }
   },
-  "types": "./types/index.d.ts",
+  "types": "./src/index.ts",
   "imports": {
     "#TimeHelper": {
-      "node": "./src/lib/TimeHelper.node.ts",
-      "default": "./src/lib/TimeHelper.web.ts"
+      "node": "./lib/TimeHelper.node.ts",
+      "default": "./lib/TimeHelper.web.ts"
     },
     "#CryptoHelper": {
-      "node": "./src/lib/CryptoHelper.node.ts",
-      "default": "./src/lib/CryptoHelper.web.ts"
+      "node": "./lib/CryptoHelper.node.ts",
+      "default": "./lib/CryptoHelper.web.ts"
     },
     "#Storage.fs": {
-      "node": "./src/lib/Storage.fs.node.ts",
-      "default": "./src/lib/Storage.indexeddb.ts"
+      "node": "./lib/Storage.fs.node.ts",
+      "default": "./lib/Storage.fs.web.ts"
     }
   },
   "scripts": {
     "publ": "npm publ --access public",
     "postinstall": "node ./scripts/fix-package.js",
-    "dev": "vite build --watch --minify=false --mode=development  -- --format=cjs",
+    "dev": "vite build --watch --minify=false --mode=development  -- --format=es",
     "clear": "rm -r types/* dist/*",
-    "build": "tsc && yarn build:esm && yarn build:esm",
+    "build": "tsc && yarn build:esm && yarn build:cjs",
     "build:esm": "vite build -- --format=es",
     "build:cjs": "vite build -- --format=cjs",
     "vite": "vite"
   },
   "files": [
     "dist",
-    "types"
+    "src",
+    "lib"
   ],
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@bfchain/util": "^0.0.1-alpha.4",
-    "@types/node": "^16.9.1",
     "idb": "^6.1.4",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.3",
+    "@types/node": "^16.9.1",
     "esbuild-plugin-tsc": "^0.3.0",
     "tslib": "^2.3.1",
     "typescript": "^4.4.3",

@@ -12,19 +12,19 @@
     // "checkJs": true,                             /* Report errors in .js files. */
     // "jsx": "preserve",                           /* Specify JSX code generation: 'preserve', 'react-native', 'react', 'react-jsx' or 'react-jsxdev'. */
     "declaration": true, /* Generates corresponding '.d.ts' file. */
-    "emitDeclarationOnly": true,
+    // "emitDeclarationOnly": true,
     // "declarationMap": true, /* Generates a sourcemap for each corresponding '.d.ts' file. */
     // "sourceMap": true,                           /* Generates corresponding '.map' file. */
     // "outFile": "./",                             /* Concatenate and emit output to single file. */
-    "outDir": "./types", /* Redirect output structure to the directory. */
-    "rootDir": "./src", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    // "outDir": "./types", /* Redirect output structure to the directory. */
+    // "rootDir": "./src", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     // "composite": true,                           /* Enable project compilation */
     // "tsBuildInfoFile": "./",                     /* Specify file to store incremental compilation information */
     // "removeComments": true,                      /* Do not emit comments to output. */
-    // "noEmit": true,                              /* Do not emit outputs. */
+    "noEmit": true,                              /* Do not emit outputs. */
     "importHelpers": true, /* Import emit helpers from 'tslib'. */
     // "downlevelIteration": true,                  /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
-    "isolatedModules": true,                     /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+    "isolatedModules": false,                     /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
     /* Strict Type-Checking Options */
     "strict": true, /* Enable all strict type-checking options. */
     "noImplicitAny": true, /* Raise error on expressions and declarations with an implied 'any' type. */
@@ -46,19 +46,19 @@
     // "baseUrl": "./",                             /* Base directory to resolve non-absolute module names. */
     "paths": {
       "#TimeHelper": [
-        "./src/lib/TimeHelper.web.ts",
-        "./src/lib/TimeHelper.node.ts",
+        "./lib/TimeHelper.web.ts",
+        "./lib/TimeHelper.node.ts",
       ],
       "#CryptoHelper": [
-        "./src/lib/CryptoHelper.web.ts",
-        "./src/lib/CryptoHelper.node.ts",
+        "./lib/CryptoHelper.web.ts",
+        "./lib/CryptoHelper.node.ts",
       ],
       "#Storage.fs": [
-        "./src/lib/Storage.fs.web.ts",
-        "./src/lib/Storage.fs.node.ts",
+        "./lib/Storage.fs.web.ts",
+        "./lib/Storage.fs.node.ts",
       ]
     }, /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
-    // "rootDirs": ["./src","src/test"],                              /* List of root folders whose combined content represents the structure of the project at runtime. */
+    "rootDirs": ["./src","./lib", "./test"],                              /* List of root folders whose combined content represents the structure of the project at runtime. */
     // "typeRoots": [],                             /* List of folders to include type definitions from. */
     // "types": [],                                 /* Type declaration files to be included in compilation. */
     // "allowSyntheticDefaultImports": true,        /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
@@ -78,22 +78,22 @@
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
   },
   "files": [
-    "./src/core/Cryptolalia.ts",
-    "./src/core/CryptolaliaAssets.ts",
-    "./src/core/CryptolaliaDataList.ts",
-    "./src/core/index.ts",
-    "./src/core/TimeHelper.ts",
-    "./src/core/Storage.ts",
-    "./src/lib/Storage.fs.node.ts",
-    "./src/lib/Storage.fs.web.ts",
-    "./src/lib/TimeHelper.node.ts",
-    "./src/lib/TimeHelper.web.ts",
-    "./src/lib/CryptoHelper.node.ts",
-    "./src/lib/CryptoHelper.web.ts",
-    "./src/test/test.ts",
-    "./src/core/CryptolaliaConfig.ts",
-    "./src/core/CryptoHelper.ts",
-    "./src/core/CryptolaliaTimelineTree.ts",
-    "./src/core/MessageHelper.ts"
+    "./src/Cryptolalia.ts",
+    "./src/CryptolaliaAssets.ts",
+    "./src/CryptolaliaDataList.ts",
+    "./src/index.ts",
+    "./src/TimeHelper.ts",
+    "./src/Storage.ts",
+    "./src/CryptolaliaConfig.ts",
+    "./src/CryptoHelper.ts",
+    "./src/CryptolaliaTimelineTree.ts",
+    "./src/MessageHelper.ts",
+    "./lib/Storage.fs.node.ts",
+    "./lib/Storage.fs.web.ts",
+    "./lib/TimeHelper.node.ts",
+    "./lib/TimeHelper.web.ts",
+    "./lib/CryptoHelper.node.ts",
+    "./lib/CryptoHelper.web.ts",
+    "./test/test.ts"
   ]
 }

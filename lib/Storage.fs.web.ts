@@ -1,4 +1,5 @@
-import { Inject, PromiseOut } from "@bfchain/util";
+import { Inject } from "@bfchain/util-dep-inject";
+import { PromiseOut } from "@bfchain/util-extends-promise-out";
 import * as idb from "idb";
 import { openDB } from "idb";
 import {
@@ -6,7 +7,7 @@ import {
   Storage,
   StorageBase,
   TransactionStorage,
-} from "../core/Storage";
+} from "../src/Storage";
 import {
   Del,
   deserialize,

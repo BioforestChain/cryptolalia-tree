@@ -1,6 +1,6 @@
 import yaml, { Type } from "js-yaml";
-import { OrderMap } from "../core/CryptolaliaTimelineTree";
-import { Storage, StorageBase } from "../core/Storage";
+import { OrderMap } from "../src/CryptolaliaTimelineTree";
+import { Storage, StorageBase } from "../src/Storage";
 
 //#region 编解码器
 
@@ -77,8 +77,11 @@ const schema = yaml.DEFAULT_SCHEMA.extend([
 ]);
 export const deserialize = <T = unknown>(binary: Uint8Array) =>
   yaml.load(binary.toString(), { schema }) as any;
+
+const textEncoder = new TextEncoder();
+
 export const serialize = (obj: any) =>
-  Buffer.from(yaml.dump(obj, { schema })) as Uint8Array;
+  textEncoder.encode(yaml.dump(obj, { schema }));
 //#endregion
 
 //#region 内存存储器

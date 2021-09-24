@@ -1,5 +1,6 @@
 import { TimeHelper } from "#TimeHelper";
-import { Inject, Injectable, PromiseOut } from "@bfchain/util";
+import { Inject, Injectable } from "@bfchain/util-dep-inject";
+import { PromiseOut } from "@bfchain/util-extends-promise-out";
 import { addManyMsg, addMsg, CryptolaliaCore } from "./core";
 import { CryptolaliaDataList } from "./CryptolaliaDataList";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";

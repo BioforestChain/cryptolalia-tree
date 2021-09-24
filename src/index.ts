@@ -8,3 +8,5 @@ export * from "./CryptolaliaConfig";
 export * from "./CryptoHelper";
 export * from "./CryptolaliaTimelineTree";
 export * from "./MessageHelper";
+export * from "./CryptolaliaSync";
+// import "../lib/@module";
