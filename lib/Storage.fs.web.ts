@@ -19,6 +19,7 @@ const enum CONST {
   PATH_SEP = "/",
   FILE_TYPE_FLAG = 1,
   DIR_TYPE_FLAG = 2,
+  ROOT_DIR = ":root:",
 }
 
 class PathParser {
@@ -35,16 +36,7 @@ class PathParser {
       }
       cwd = PathParser.normal(cwd.map((slice) => slice.trim()));
 
-      if (isRoot) {
-        if (cwd.length > paths.length) {
-          throw new SyntaxError(`'${paths}' no belong to ${cwd}`);
-        }
-        for (let i = 0; i < cwd.length; ++i) {
-          if (cwd[i] !== paths[i]) {
-            throw new SyntaxError(`'${paths}' no belong to ${cwd}`);
-          }
-        }
-      } else {
+      if (isRoot === false) {
         const mergedPaths = cwd.concat(paths);
         for (let i = 0; i > mergedPaths.length; ++i) {
           const slice = mergedPaths[i];
@@ -52,6 +44,16 @@ class PathParser {
             mergedPaths.splice(i - 1, 2);
             i -= 2;
           }
+        }
+        paths = mergedPaths;
+      }
+
+      if (cwd.length > paths.length) {
+        throw new SyntaxError(`'${paths}' no belong to ${cwd}`);
+      }
+      for (let i = 0; i < cwd.length; ++i) {
+        if (cwd[i] !== paths[i]) {
+          throw new SyntaxError(`'${paths}' no belong to ${cwd}`);
         }
       }
     }
@@ -65,7 +67,11 @@ class PathParser {
   }
 
   get dirname() {
-    return this.paths.slice(0, -1).join(CONST.PATH_SEP);
+    const parentPaths = this.paths.slice(0, -1);
+    if (parentPaths.length > 0) {
+      return parentPaths.join(CONST.PATH_SEP);
+    }
+    return CONST.ROOT_DIR;
   }
   get basename() {
     return this.paths[this.paths.length - 1];
@@ -94,27 +100,19 @@ declare namespace IDBFileSystem {
   };
   type IDBPDatabase = idb.IDBPDatabase<FSDBTypes>;
   type DirStore<Mode extends IDBTransactionMode = "readonly"> =
-    idb.IDBPObjectStore<
-      IDBFileSystem.FSDBTypes,
-      [STORE_CONST.DIR],
-      STORE_CONST.DIR,
-      Mode
-    >;
+    idb.IDBPObjectStore<IDBFileSystem.FSDBTypes, any, STORE_CONST.DIR, Mode>;
   type FileStore<Mode extends IDBTransactionMode = "readonly"> =
-    idb.IDBPObjectStore<
-      IDBFileSystem.FSDBTypes,
-      [STORE_CONST.FILE],
-      STORE_CONST.FILE,
-      Mode
-    >;
+    idb.IDBPObjectStore<IDBFileSystem.FSDBTypes, any, STORE_CONST.FILE, Mode>;
 }
 
-class IDBFileSystem {
-  constructor(readonly dbName: string /* readonly cwd: Storage.Paths */) {}
-  private _idb: BFChainUtil.PromiseMaybe<IDBFileSystem.IDBPDatabase> = openDB(
-    this.dbName,
-    1,
-    {
+const _IDB_CACHE_ = new Map<
+  string,
+  BFChainUtil.PromiseMaybe<IDBFileSystem.IDBPDatabase>
+>();
+const _getIdb = (idbName: string) => {
+  let idb = _IDB_CACHE_.get(idbName);
+  if (idb === undefined) {
+    idb = openDB<IDBFileSystem.FSDBTypes>(idbName, 1, {
       upgrade(database, oldVersion, newVersion, transaction) {
         switch (oldVersion) {
           case 0:
@@ -122,6 +120,7 @@ class IDBFileSystem {
               autoIncrement: false,
               keyPath: null,
             });
+            dirStore.put(new Map(), CONST.ROOT_DIR);
             // dirStore.createIndex("dirinfo", CONST.DIR_KEY, { unique: true });
 
             const fileStore = database.createObjectStore(STORE_CONST.FILE, {
@@ -130,8 +129,15 @@ class IDBFileSystem {
             });
         }
       },
-    },
-  ).then((idb) => (this._idb = idb as any));
+    }).then((idb) => (_IDB_CACHE_.set(idbName, idb), idb));
+    _IDB_CACHE_.set(idbName, idb);
+  }
+  return idb;
+};
+
+class IDBFileSystem {
+  constructor(readonly dbName: string /* readonly cwd: Storage.Paths */) {}
+  private _idb = _getIdb(this.dbName);
 
   /**是否存在 */
   async exists(pathname: string | Storage.Paths) {
@@ -198,6 +204,7 @@ class IDBFileSystem {
     const { dirname: parentDirname, basename: dirBasename } = new PathParser(
       dirname,
     );
+
     let parentDirInfoMap = await dirStore.get(parentDirname);
     if (parentDirInfoMap === undefined) {
       if (recursive === false) {
@@ -356,7 +363,7 @@ class IndexeddbFilesystemStorageBase extends StorageBase {
   constructor(
     @Inject(ARGS.TARGET_DIR, { optional: true })
     protected targetDir: string = "usr",
-    @Inject(ARGS.TARGET_DIR, { optional: true })
+    @Inject(ARGS.IDB_NAME, { optional: true })
     readonly idbName: string = "cryptolalia-tree-fs",
   ) {
     super();
