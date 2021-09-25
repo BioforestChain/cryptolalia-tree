@@ -45,11 +45,14 @@ await cryptolalia1.addMsg({
 
 ## 提示 TIP
 
-目前实现了基于**nodejs-fs-apis**的带事务的存储模块，并用在[测试代码](./src/test/test.ts)中。
-会很快提供基于 indexedDB 的存储模块，用于浏览器端
+该项目提供了除了算法，还有一些与 platform 相关的适配模块，主要是 nodejs 与 web 这两个平台。
 
-```ts
-import { env, cwd } from "node:process";
-env.FSS_DIR = path.join(cwd(), "./.cache/fs/1");
-Resolve(FilesystemsStorage, moduleMap1);
-```
+- @bfchain/cryptolalia-tree/lib/CryptoHelper.node
+- @bfchain/cryptolalia-tree/lib/CryptoHelper.web
+- @bfchain/cryptolalia-tree/lib/CryptoHelper
+- @bfchain/cryptolalia-tree/lib/Storage.fs.node
+- @bfchain/cryptolalia-tree/lib/Storage.fs.web
+- @bfchain/cryptolalia-tree/lib/Storage.fs
+- @bfchain/cryptolalia-tree/lib/TimeHelper.node
+- @bfchain/cryptolalia-tree/lib/TimeHelper.web
+- @bfchain/cryptolalia-tree/lib/TimeHelper
