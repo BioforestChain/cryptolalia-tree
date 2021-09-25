@@ -113,7 +113,7 @@ class BranchHanlder<D> {
         cache: undefined,
       };
       const metaCache = this._metaCache;
-      getJsObject(
+      metaCache.cache = getJsObject(
         transaction,
         ["meta-branch", `group-${groupId}`],
         (map?: BranchMetaGroup) => {
@@ -378,6 +378,12 @@ export class CryptolaliaDataList<D> {
     } else if (meta.lastBranchId < branchId) {
       preBranchId = meta.secondLastBranchId = meta.lastBranchId;
       meta.lastBranchId = branchId;
+    } else if (meta.lastBranchId === branchId) {
+      return;
+    } else {
+      throw new Error(
+        "NOSUPPORT: new-branchId should not less then last-branchId",
+      );
     }
     await this._metaHanlder.setMeta(transaction, meta);
     if (preBranchId !== 0) {

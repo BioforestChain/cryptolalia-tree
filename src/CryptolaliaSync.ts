@@ -168,69 +168,73 @@ export class CryptolaliaSync<D = unknown> {
   async doSync(now = this.timeHelper.now()) {
     const { msgHelper, timelineTree, dataList } = this;
     const ignores = new SyncIgnores();
-    sync: do {
-      const localeBranchRoute = await timelineTree.getBranchRoute(now);
+    const newMsgCollection: D[][] = [];
 
-      const remoteBranchRoute = await this.requestMessage({
-        cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE,
-        leafTime: now,
-      });
+    const localeBranchRoute = await timelineTree.getBranchRoute(now);
 
-      /// 对比两端的BranchRoute，从 low-level 到 high-level 进行同步， top-level 其实就意味着全部数据，希望不要走到这一步，不然要同步的数据可能很多
-      localeBranchRoute.sort((a, b) => a.level - b.level);
-      remoteBranchRoute.sort((a, b) => a.level - b.level);
+    const remoteBranchRoute = await this.requestMessage({
+      cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE,
+      leafTime: now,
+    });
 
-      // console.log("localeBranchRoute", localeBranchRoute);
-      // console.log("remoteBranchRoute", remoteBranchRoute);
+    /// 对比两端的BranchRoute，从 high-level 到 low-level 进行同步。虽然这样就意味着随着level的增加每一次同步的成本也会增加，但这样可以确保差异数据的收取是根据时间顺序来的
+    localeBranchRoute.sort((a, b) => b.level - a.level);
+    remoteBranchRoute.sort((a, b) => b.level - a.level);
 
-      for (let i = 0; i < localeBranchRoute.length; i++) {
-        const localeBranch = localeBranchRoute[i];
-        const remoteBranch = remoteBranchRoute[i];
+    // console.log("localeBranchRoute", localeBranchRoute);
+    // console.log("remoteBranchRoute", remoteBranchRoute);
 
-        const {
-          branchId: remoteBranchId,
-          level: remoteLevel,
-          hash: remoteHash,
-        } = remoteBranch;
-        if (
-          localeBranch.branchId !== remoteBranchId ||
-          localeBranch.level !== remoteLevel
-        ) {
-          throw new Error(
-            `invalid remote branch info: ${remoteLevel}(level)/${remoteBranchId}/(branchId) when ${new Date(
-              now,
-            ).toLocaleString()}`,
-          );
-        }
-        //#region 从低分支到高分支，找到开始分叉的分支并同步
+    /// 只需要对比最顶部的hash是否一致，就能知道需不需要进行数据同步
+    const localeTopBranch = localeBranchRoute[0];
+    const remoteTopBranch = remoteBranchRoute[0];
 
-        if (
-          // 如果远端没有数据，直接跳过，无需同步
-          remoteHash.length === 0 ||
-          // 签名一致，无需同步
-          msgHelper.signIsSign(localeBranch.hash, remoteHash)
-        ) {
-          continue;
-        }
+    const {
+      branchId: topBranchId,
+      level: topLevel,
+      hash: topHash,
+    } = remoteTopBranch;
+    if (
+      localeTopBranch.branchId !== topBranchId ||
+      localeTopBranch.level !== topLevel
+    ) {
+      throw new Error(
+        `invalid remote branch info: ${topLevel}(level)/${topBranchId}/(branchId) when ${new Date(
+          now,
+        ).toLocaleString()}`,
+      );
+    }
 
-        if (
-          await this._syncBranch(
-            msgHelper,
-            timelineTree,
-            dataList,
-            remoteBranchId,
-            remoteLevel,
-            ignores,
-          )
-        ) {
-          // 每深度同步一次，发生了改动的话，就重新计算hash并比对
-          continue sync;
-        }
-        //#endregion
-      }
-      // 走到这里，就意味着branchroute完全一致了
-      break;
-    } while (true);
+    if (
+      // 如果远端没有数据，直接跳过，无需同步
+      topHash.length === 0 ||
+      // 签名一致，无需同步
+      msgHelper.signIsSign(localeTopBranch.hash, topHash)
+    ) {
+      return false;
+    }
+
+    /// 同步数据，收集缺失的数据
+    await this._syncBranch(
+      msgHelper,
+      timelineTree,
+      dataList,
+      topBranchId,
+      topLevel,
+      ignores,
+      newMsgCollection,
+    );
+
+    // 如果有缺失数据，在本地进行保存
+    if (newMsgCollection.length > 0) {
+      await addManyMsg(
+        msgHelper,
+        timelineTree,
+        dataList,
+        newMsgCollection.flat(),
+      );
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -240,7 +244,7 @@ export class CryptolaliaSync<D = unknown> {
    * @param dataList
    * @param branchId
    * @param level
-   * @returns 本地数据是否发生了改变？
+   * @returns 是否有本地缺失的数据？
    */
   private async _syncBranch(
     msgHelper: MessageHelper<D>,
@@ -249,6 +253,7 @@ export class CryptolaliaSync<D = unknown> {
     branchId: number,
     level: number,
     ignores: SyncIgnores,
+    newMsgCollection: D[][],
   ): Promise<boolean> {
     // 被列入忽略名单，已经通过过，本次任务内无需再同步
     if (ignores.has(branchId, level)) {
@@ -266,13 +271,18 @@ export class CryptolaliaSync<D = unknown> {
       }
 
       /// 写入远端的数据（会自动合并本地数据）
-      const result = await addManyMsg(
-        msgHelper,
-        timelineTree,
-        dataList,
-        remoteBranchData.mapData.values(),
+      const remoteMsgList = [...remoteBranchData.mapData.values()];
+      const hasMsgList = await timelineTree.hasManyLeaf(remoteMsgList);
+      const newMsgList = remoteMsgList.filter(
+        (_, i) => hasMsgList[i] === false,
       );
-      return result.some(Boolean);
+      // console.log("remoteMsgList", remoteMsgList);
+      // console.log("hasMsgList", hasMsgList);
+      if (newMsgList.length > 0) {
+        newMsgCollection.push(newMsgList);
+        return true;
+      }
+      return false;
     }
 
     /// level !== 0
@@ -287,23 +297,30 @@ export class CryptolaliaSync<D = unknown> {
     );
 
     /// 找出差集
+    const diffBranchIdList: number[] = [];
     for (const [branchId, remoteHash] of remoteBranchChildren) {
       const localeHash = localBranchChildren.get(branchId);
-      if (localeHash && msgHelper.signIsSign(remoteHash, localeHash)) {
-        remoteBranchChildren.delete(branchId); // 删除掉一样hash的
+      if (
+        (localeHash !== undefined &&
+          msgHelper.signIsSign(remoteHash, localeHash)) === false
+      ) {
+        diffBranchIdList.push(branchId);
       }
     }
-    // console.log("diffBranchChildren", remoteBranchChildren);
+    diffBranchIdList.sort();
+    // console.log("parentLevel", level, "diffBranchIdList", diffBranchIdList);
     let hasChanged = false;
-    for (const diffBranchId of remoteBranchChildren.keys()) {
-      hasChanged ||= await this._syncBranch(
+    for (const diffBranchId of diffBranchIdList) {
+      const _hasChanged = await this._syncBranch(
         msgHelper,
         timelineTree,
         dataList,
         diffBranchId,
         level - 1,
         ignores,
+        newMsgCollection,
       );
+      hasChanged ||= _hasChanged;
     }
 
     return hasChanged;

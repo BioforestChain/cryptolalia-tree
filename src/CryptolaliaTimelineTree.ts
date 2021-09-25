@@ -28,6 +28,46 @@ export class CryptolaliaTimelineTree<D> {
     return this._addLeaf(leaf, this._store);
   }
 
+  @requestTransaction([], "_store", "_trs")
+  async hasManyLeaf(leafs: Iterable<D>) {
+    const transaction = await this._trs;
+    return this._batchHas(leafs, transaction);
+  }
+
+  private async _batchHas(leafs: Iterable<D>, transaction: TransactionStorage) {
+    const { messageHelper } = this;
+    const result: boolean[] = [];
+    const blockDataCache = new Map<
+      number,
+      CryptolaliaTimelineTree.BranchData<D> | null
+    >();
+    for (const leaf of leafs) {
+      const blockId = this.config.calcBranchId(
+        messageHelper.getCreateTime(leaf),
+      );
+      let blockData = blockDataCache.get(blockId);
+      if (blockData === undefined) {
+        blockData =
+          (await transaction.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
+            ["blocks", `block-${blockId}`],
+          )) || null;
+        blockDataCache.set(blockId, blockData);
+      }
+      if (blockData !== null) {
+        const sign = messageHelper.getSignature(leaf);
+        const indexe = getIndexe(sign, blockData.indexedDigit);
+
+        const sameIndexeLeaf = blockData.mapData.get(indexe);
+        if (sameIndexeLeaf !== undefined) {
+          result.push(messageHelper.msgIsSign(sameIndexeLeaf, sign));
+          continue;
+        }
+      }
+      result.push(false);
+    }
+    return result;
+  }
+
   private async _addLeaf(leaf: D, transaction: TransactionStorage) {
     const { messageHelper } = this;
     const createTime = messageHelper.getCreateTime(leaf);
@@ -41,13 +81,12 @@ export class CryptolaliaTimelineTree<D> {
      */
     //#region Step 0 判断数据是否存在，并顺便构建 Step 2所需要存储的数据(这里可以做一个并发合并作业)
     const level0Path = ["blocks", `block-${branchId}`];
-    const branchData: CryptolaliaTimelineTree.BranchData<D> =
-      (await transaction.getJsObject<CryptolaliaTimelineTree.BranchData<D>>(
-        level0Path,
-      )) || {
-        indexedDigit: 8,
-        mapData: new OrderMap(),
-      };
+    const branchData = (await transaction.getJsObject<
+      CryptolaliaTimelineTree.BranchData<D>
+    >(level0Path)) || {
+      indexedDigit: 8,
+      mapData: new OrderMap(),
+    };
     const sign = messageHelper.getSignature(leaf);
 
     /// 将数据写入到索引表中

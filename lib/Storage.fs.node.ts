@@ -171,7 +171,6 @@ class NodeFilesystemsStorage
     const targetDir = path.resolve(this.targetDir, ...paths);
     let _lock = this._transactionMap.get(targetDir);
     if (_lock) {
-      debugger;
       const waitter = new PromiseOut<void>();
       _lock.queue.push(waitter);
       await waitter.promise;

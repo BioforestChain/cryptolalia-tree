@@ -516,7 +516,6 @@ class IndexeddbFilesystemsStorage
     const targetDir = new PathParser(paths, this.targetDir).fullpath;
     let _lock = this._transactionMap.get(targetDir);
     if (_lock) {
-      debugger;
       const waitter = new PromiseOut<void>();
       _lock.queue.push(waitter);
       await waitter.promise;
