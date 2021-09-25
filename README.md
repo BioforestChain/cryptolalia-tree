@@ -56,3 +56,8 @@ await cryptolalia1.addMsg({
 - @bfchain/cryptolalia-tree/lib/TimeHelper.node
 - @bfchain/cryptolalia-tree/lib/TimeHelper.web
 - @bfchain/cryptolalia-tree/lib/TimeHelper
+
+## DEMO
+
+- [nodejs test](./test/test.ts)
+- [browser test](https://github.com/BioforestChain/cryptolalia-tree/blob/demo/src/lib/cryptolalia.ts)
