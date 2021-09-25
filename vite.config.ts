@@ -7,5 +7,6 @@ export default defineConfig({
     target: ["chrome74", "node14"],
     outDir: "docs",
   },
+  base: "./",
   plugins: [svelte()],
 });
