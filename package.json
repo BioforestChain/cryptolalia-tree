@@ -1,6 +1,6 @@
 {
   "name": "@bfchain/cryptolalia-tree",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "使用区块链的技术，对信息进行非对称加密，以及不可篡改的保护。",
   "main": "./dist/cryptolalia-tree.es.js",
   "type": "module",
