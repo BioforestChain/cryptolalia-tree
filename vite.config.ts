@@ -5,6 +5,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 export default defineConfig({
   build: {
     target: ["chrome74", "node14"],
+    outDir: "docs",
   },
   plugins: [svelte()],
 });

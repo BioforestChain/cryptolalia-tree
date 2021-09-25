@@ -1,11 +1,8 @@
 <script lang="ts">
-  import logo from "./assets/svelte.png";
   import Room from "./lib/Room.svelte";
 </script>
 
-<h1>
-  <img src={logo} alt="BFChain Logo" />Cryptolalia Demo
-</h1>
+<h1>Cryptolalia Demo</h1>
 <main>
   <Room />
 </main>
@@ -17,15 +14,7 @@
     background-color: #e0e0e0;
   }
   h1 {
-    display: flex;
-    align-items: center;
     text-transform: uppercase;
-  }
-
-  img {
-    height: 1em;
-    width: 1em;
-    margin: 0 0.5em;
   }
 
   main {
