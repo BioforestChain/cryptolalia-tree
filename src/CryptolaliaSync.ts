@@ -33,24 +33,24 @@ export class CryptolaliaSync<D = unknown> {
         return;
       }
       const [reqId, msg] = data;
-      /// req
+      if (msg === SYNC_MSG_CMD.ABORT) {
+        const task = this.taskSeq.get(reqId);
+        if (task) {
+          this.taskSeq.delete(reqId);
+          task.controller?.abort();
+        }
+        return;
+      }
+      if (msg === SYNC_MSG_CMD.REFUSE) {
+        const req = this._reqMap.get(reqId);
+        if (req) {
+          // this._reqMap.delete(reqId);
+          req.reject(REASON_REFUSE_BY_REMOTE);
+        }
+        return;
+      }
+      /// req/res
       if (msg && "cmd" in msg) {
-        if (msg.cmd === SYNC_MSG_CMD.ABORT) {
-          const task = this.taskSeq.get(msg.reqId);
-          if (task) {
-            this.taskSeq.delete(msg.reqId);
-            task.controller?.abort();
-          }
-          return;
-        }
-        if (msg.cmd === SYNC_MSG_CMD.REFUSE) {
-          const req = this._reqMap.get(msg.reqId);
-          if (req) {
-            // this._reqMap.delete(msg.reqId);
-            req.reject(REASON_REFUSE_BY_REMOTE);
-          }
-          return;
-        }
         if (
           this.taskSeq.push(reqId, {
             reqId,
@@ -58,10 +58,7 @@ export class CryptolaliaSync<D = unknown> {
             controller: undefined, // new AbortController(),
           }) === false
         ) {
-          this.syncChannel.postMessage([
-            0,
-            { cmd: SYNC_MSG_CMD.REFUSE, reqId },
-          ]);
+          this.syncChannel.postMessage([reqId, SYNC_MSG_CMD.REFUSE]);
         }
       }
       /// res
@@ -121,12 +118,11 @@ export class CryptolaliaSync<D = unknown> {
       reject: (reason: unknown) => void;
     }
   >();
-  requestMessage<I extends CryptolaliaTypes.Msg.In<CryptolaliaSync.SyncMsg<D>>>(
-    msg: I,
-    opts?: { signal?: AbortSignal },
-  ) {
+  requestMessage<
+    I extends CryptolaliaSync.ReqResMsg.In<CryptolaliaSync.SyncMsg<D>>,
+  >(msg: I, opts?: { signal?: AbortSignal }) {
     return new Promise<
-      CryptolaliaTypes.Msg.GetOut<CryptolaliaSync.SyncMsg<D>, I>
+      CryptolaliaSync.ReqResMsg.GetOut<CryptolaliaSync.SyncMsg<D>, I>
     >((resolve, reject) => {
       const signal = opts?.signal;
       /// 如果有中断信号，需要对信号做一些额外的操作
@@ -137,10 +133,7 @@ export class CryptolaliaSync<D = unknown> {
           this._reqMap.delete(reqId);
           // 发送请求中断信号
           if (e !== REASON_REFUSE_BY_REMOTE) {
-            this.syncChannel.postMessage([
-              0,
-              { cmd: SYNC_MSG_CMD.ABORT, reqId },
-            ]);
+            this.syncChannel.postMessage([reqId, SYNC_MSG_CMD.ABORT]);
           }
           // 继续返回异常
           _reject(e);
@@ -475,6 +468,7 @@ class Responser<T> {
 export declare namespace CryptolaliaSync {
   type Channel<D> = CryptolaliaTypes.MessageChannel<SyncMsg<D>>;
 
+  type SyncEvent<D> = CryptolaliaTypes.MessageChannel.Event<SyncMsg<D>>;
   type SyncMsg<D> =
     | Sync.BranchRouteMsg<D>
     | Sync.BranchChildrenMsg<D>
@@ -482,15 +476,23 @@ export declare namespace CryptolaliaSync {
     | Sync.AbortMsg
     | Sync.RefuseMsg;
 
-  type SyncEvent<D> = CryptolaliaTypes.MessageChannel.Event<SyncMsg<D>>;
+  type ReqResMsg<I, O> = CryptolaliaTypes.Msg<[number, I], [number, O]>;
+  namespace ReqResMsg {
+    type In<M> = M extends ReqResMsg<infer I, infer _> ? I : never;
+    type GetOut<S, I> = S extends ReqResMsg<infer In, infer O>
+      ? I extends In
+        ? O
+        : never
+      : never;
+  }
   namespace Sync {
-    type BranchRouteMsg<D> = CryptolaliaTypes.Msg<
+    type BranchRouteMsg<D> = ReqResMsg<
       { cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE; leafTime: number },
       BFChainUtil.PromiseReturnType<
         CryptolaliaTimelineTree<D>["getBranchRoute"]
       >
     >;
-    type BranchChildrenMsg<D> = CryptolaliaTypes.Msg<
+    type BranchChildrenMsg<D> = ReqResMsg<
       {
         cmd: SYNC_MSG_CMD.GET_BRANCH_CHILDREN;
         branchId: number;
@@ -500,28 +502,28 @@ export declare namespace CryptolaliaSync {
         CryptolaliaTimelineTree<D>["getBranchChildren"]
       >
     >;
-    type DownloadByBranchIdMsg<D> = CryptolaliaTypes.Msg<
+    type DownloadByBranchIdMsg<D> = ReqResMsg<
       { cmd: SYNC_MSG_CMD.DOWNLOAD_BY_BRANCHID; branchId: number },
       BFChainUtil.PromiseReturnType<CryptolaliaTimelineTree<D>["getBranchData"]>
     >;
     /**中断请求 */
     type AbortMsg = CryptolaliaTypes.Msg<
-      { cmd: SYNC_MSG_CMD.ABORT; reqId: number },
+      [reqId: number, cmd: SYNC_MSG_CMD.ABORT],
       void
     >;
     /**拒绝响应 */
     type RefuseMsg = CryptolaliaTypes.Msg<
-      { cmd: SYNC_MSG_CMD.REFUSE; reqId: number },
+      [reqId: number, cmd: SYNC_MSG_CMD.REFUSE],
       void
     >;
   }
 
   type ResponserTaskType<D> = {
     reqId: number;
-    args: CryptolaliaTypes.Msg.In<
-      | CryptolaliaSync.Sync.BranchRouteMsg<D>
-      | CryptolaliaSync.Sync.BranchChildrenMsg<D>
-      | CryptolaliaSync.Sync.DownloadByBranchIdMsg<D>
+    args: ReqResMsg.In<
+      | Sync.BranchRouteMsg<D>
+      | Sync.BranchChildrenMsg<D>
+      | Sync.DownloadByBranchIdMsg<D>
     >;
     controller?: AbortController;
   };

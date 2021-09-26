@@ -382,7 +382,13 @@ export declare namespace ChatsApp {
         msg: CryptolaliaTypes.Msg.In<W>,
       ];
 
-  type NewMessageCallback<D> = (event: SessionMsg<D>) => unknown;
+  type NewMessageCallback<
+    D,
+    W extends CryptolaliaTypes.Msg = CryptolaliaTypes.Msg,
+  > = CryptolaliaTypes.MessageChannel.Callback<ChatsMsg<D, W>>; // (event: SessionMsg<D>) => unknown;
 
-  type ChatsMsg<D> = CryptolaliaTypes.Msg<SessionMsg<D>>;
+  type ChatsMsg<
+    D,
+    W extends CryptolaliaTypes.Msg = CryptolaliaTypes.Msg,
+  > = CryptolaliaTypes.Msg<SessionMsg<D, W>>;
 }

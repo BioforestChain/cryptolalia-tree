@@ -1,10 +1,14 @@
 export declare namespace CryptolaliaTypes {
-  export interface MessageChannel<T> {
+  export interface MessageChannel<T extends Msg> {
     postMessage(msg: MessageChannel.Event<T>): void;
     onMessage?: MessageChannel.Callback<T>;
   }
+  export namespace MessageChannel {
+    type Event<T> = Msg.InOut<T>;
+    type Callback<T> = (msgEvent: Event<T>) => unknown;
+  }
 
-  type Msg<I = unknown, O = I> = { In: I; Out: O };
+  export type Msg<I = unknown, O = unknown> = { In: I; Out: O };
   namespace Msg {
     type InOut<S> = In<S> | Out<S>;
     type In<S> = S extends Msg<infer I, infer _> ? I : never;
@@ -14,10 +18,5 @@ export declare namespace CryptolaliaTypes {
         ? O
         : never
       : never;
-  }
-
-  export namespace MessageChannel {
-    type Event<T> = [number, Msg.InOut<T>];
-    type Callback<T> = (msgEvent: Event<T>) => unknown;
   }
 }
