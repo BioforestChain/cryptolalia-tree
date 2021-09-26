@@ -62,6 +62,10 @@
         "import": "./dist/es/TimeHelper.web.mjs",
         "require": "./dist/cjs/TimeHelper.web.cjs"
       }
+    },
+    "./lib/ChatsApp/": {
+      "import": "./dist/es/ChatsApp.mjs",
+      "require": "./dist/cjs/ChatsApp.cjs"
     }
   },
   "types": "./src/index.ts",

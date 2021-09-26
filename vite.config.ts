@@ -5,11 +5,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { inspect } from "node:util";
 import { fileURLToPath } from "node:url";
-import type { InputOption } from "rollup";
+import type { InputOption, ModuleFormat } from "rollup";
 
 const libFormat = process.argv
   .find((arg) => arg.startsWith("--format="))
-  ?.split("=")[1];
+  ?.split("=")[1] as ModuleFormat;
 export const input: InputOption = {
   test: "test/test.ts",
   index: "src/index.ts",
@@ -19,6 +19,7 @@ export const input: InputOption = {
   "TimeHelper.web": "lib/TimeHelper.web.ts",
   "Storage.fs.node": "lib/Storage.fs.node.ts",
   "Storage.fs.web": "lib/Storage.fs.web.ts",
+  ChatsApp: "lib/ChatsApp/index.ts",
 };
 
 const outDir = libFormat ? `dist/${libFormat}` : undefined;
