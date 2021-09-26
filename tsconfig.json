@@ -21,10 +21,10 @@
     // "composite": true,                           /* Enable project compilation */
     // "tsBuildInfoFile": "./",                     /* Specify file to store incremental compilation information */
     // "removeComments": true,                      /* Do not emit comments to output. */
-    "noEmit": true,                              /* Do not emit outputs. */
+    "noEmit": true, /* Do not emit outputs. */
     "importHelpers": true, /* Import emit helpers from 'tslib'. */
     // "downlevelIteration": true,                  /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
-    "isolatedModules": false,                     /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+    "isolatedModules": false, /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
     /* Strict Type-Checking Options */
     "strict": true, /* Enable all strict type-checking options. */
     "noImplicitAny": true, /* Raise error on expressions and declarations with an implied 'any' type. */
@@ -58,7 +58,11 @@
         "./lib/Storage.fs.node.ts",
       ]
     }, /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
-    "rootDirs": ["./src","./lib", "./test"],                              /* List of root folders whose combined content represents the structure of the project at runtime. */
+    "rootDirs": [
+      "./src",
+      "./lib",
+      "./test"
+    ], /* List of root folders whose combined content represents the structure of the project at runtime. */
     // "typeRoots": [],                             /* List of folders to include type definitions from. */
     // "types": [],                                 /* Type declaration files to be included in compilation. */
     // "allowSyntheticDefaultImports": true,        /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
@@ -78,6 +82,7 @@
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
   },
   "files": [
+    "./src/@types.ts",
     "./src/Cryptolalia.ts",
     "./src/CryptolaliaAssets.ts",
     "./src/CryptolaliaDataList.ts",
@@ -88,12 +93,14 @@
     "./src/CryptoHelper.ts",
     "./src/CryptolaliaTimelineTree.ts",
     "./src/MessageHelper.ts",
+    "lib/ChatsApp/ChatsApp.ts",
     "./lib/Storage.fs.node.ts",
     "./lib/Storage.fs.web.ts",
     "./lib/TimeHelper.node.ts",
     "./lib/TimeHelper.web.ts",
     "./lib/CryptoHelper.node.ts",
     "./lib/CryptoHelper.web.ts",
-    "./test/test.ts"
+    "./test/test.ts",
+    "lib/ChatsApp/Helper.ts",
   ]
 }

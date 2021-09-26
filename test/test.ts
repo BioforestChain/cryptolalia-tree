@@ -43,13 +43,19 @@ type MyMessage = {
 }
 const syncChannel1: CryptolaliaSync.Channel<MyMessage> = {
   postMessage(msg) {},
-  onMessage(cb) {
+  get onMessage() {
+    return syncChannel2.postMessage;
+  },
+  set onMessage(cb) {
     syncChannel2.postMessage = cb;
   },
 };
 const syncChannel2: CryptolaliaSync.Channel<MyMessage> = {
   postMessage(msg) {},
-  onMessage(cb) {
+  get onMessage() {
+    return syncChannel1.postMessage;
+  },
+  set onMessage(cb) {
     syncChannel1.postMessage = cb;
   },
 };

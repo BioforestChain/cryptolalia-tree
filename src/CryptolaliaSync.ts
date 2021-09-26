@@ -1,7 +1,8 @@
 import { TimeHelper } from "#TimeHelper";
 import { Inject, Injectable } from "@bfchain/util-dep-inject";
 import { PromiseOut } from "@bfchain/util-extends-promise-out";
-import { addManyMsg, addMsg, CryptolaliaCore } from "./core";
+import { CryptolaliaTypes } from "./@types";
+import { addManyMsg, CryptolaliaCore } from "./core";
 import { CryptolaliaDataList } from "./CryptolaliaDataList";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { MessageHelper } from "./MessageHelper";
@@ -24,7 +25,7 @@ export class CryptolaliaSync<D = unknown> {
     private msgHelper: MessageHelper<D>,
   ) {
     /// 监听数据请求，提供数据响应服务
-    syncChannel.onMessage((data) => {
+    syncChannel.onMessage = (data) => {
       if (
         !(Array.isArray(data) && data.length === 2) /* &&
         typeof msg[0] === "number" */
@@ -71,7 +72,7 @@ export class CryptolaliaSync<D = unknown> {
           req.resolve(msg);
         }
       }
-    });
+    };
     /// 使用队列机制来进行响应任务
     this.responser.startResponse();
   }
@@ -120,12 +121,12 @@ export class CryptolaliaSync<D = unknown> {
       reject: (reason: unknown) => void;
     }
   >();
-  requestMessage<I extends CryptolaliaSync.Msg.In<CryptolaliaSync.SyncMsg<D>>>(
+  requestMessage<I extends CryptolaliaTypes.Msg.In<CryptolaliaSync.SyncMsg<D>>>(
     msg: I,
     opts?: { signal?: AbortSignal },
   ) {
     return new Promise<
-      CryptolaliaSync.Msg.GetOut<CryptolaliaSync.SyncMsg<D>, I>
+      CryptolaliaTypes.Msg.GetOut<CryptolaliaSync.SyncMsg<D>, I>
     >((resolve, reject) => {
       const signal = opts?.signal;
       /// 如果有中断信号，需要对信号做一些额外的操作
@@ -471,27 +472,8 @@ class Responser<T> {
   }
 }
 
-interface MessaageChannel<T> {
-  postMessage(msg: [number, CryptolaliaSync.Msg.InOut<T>]): void;
-  onMessage(
-    callback: (msg: [number, CryptolaliaSync.Msg.InOut<T>]) => unknown,
-  ): void;
-}
-
 export declare namespace CryptolaliaSync {
-  type Channel<D> = MessaageChannel<SyncMsg<D>>;
-
-  type Msg<I = unknown, O = unknown> = { In: I; Out: O };
-  namespace Msg {
-    type InOut<S> = In<S> | Out<S>;
-    type In<S> = S extends Msg<infer I, infer _> ? I : never;
-    type Out<S> = S extends Msg<infer _, infer O> ? O : never;
-    type GetOut<S, I> = S extends Msg<infer In, infer O>
-      ? I extends In
-        ? O
-        : never
-      : never;
-  }
+  type Channel<D> = CryptolaliaTypes.MessageChannel<SyncMsg<D>>;
 
   type SyncMsg<D> =
     | Sync.BranchRouteMsg<D>
@@ -499,14 +481,16 @@ export declare namespace CryptolaliaSync {
     | Sync.DownloadByBranchIdMsg<D>
     | Sync.AbortMsg
     | Sync.RefuseMsg;
+
+  type SyncEvent<D> = CryptolaliaTypes.MessageChannel.Event<SyncMsg<D>>;
   namespace Sync {
-    type BranchRouteMsg<D> = Msg<
+    type BranchRouteMsg<D> = CryptolaliaTypes.Msg<
       { cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE; leafTime: number },
       BFChainUtil.PromiseReturnType<
         CryptolaliaTimelineTree<D>["getBranchRoute"]
       >
     >;
-    type BranchChildrenMsg<D> = Msg<
+    type BranchChildrenMsg<D> = CryptolaliaTypes.Msg<
       {
         cmd: SYNC_MSG_CMD.GET_BRANCH_CHILDREN;
         branchId: number;
@@ -516,19 +500,25 @@ export declare namespace CryptolaliaSync {
         CryptolaliaTimelineTree<D>["getBranchChildren"]
       >
     >;
-    type DownloadByBranchIdMsg<D> = Msg<
+    type DownloadByBranchIdMsg<D> = CryptolaliaTypes.Msg<
       { cmd: SYNC_MSG_CMD.DOWNLOAD_BY_BRANCHID; branchId: number },
       BFChainUtil.PromiseReturnType<CryptolaliaTimelineTree<D>["getBranchData"]>
     >;
     /**中断请求 */
-    type AbortMsg = Msg<{ cmd: SYNC_MSG_CMD.ABORT; reqId: number }, void>;
+    type AbortMsg = CryptolaliaTypes.Msg<
+      { cmd: SYNC_MSG_CMD.ABORT; reqId: number },
+      void
+    >;
     /**拒绝响应 */
-    type RefuseMsg = Msg<{ cmd: SYNC_MSG_CMD.REFUSE; reqId: number }, void>;
+    type RefuseMsg = CryptolaliaTypes.Msg<
+      { cmd: SYNC_MSG_CMD.REFUSE; reqId: number },
+      void
+    >;
   }
 
   type ResponserTaskType<D> = {
     reqId: number;
-    args: CryptolaliaSync.Msg.In<
+    args: CryptolaliaTypes.Msg.In<
       | CryptolaliaSync.Sync.BranchRouteMsg<D>
       | CryptolaliaSync.Sync.BranchChildrenMsg<D>
       | CryptolaliaSync.Sync.DownloadByBranchIdMsg<D>
