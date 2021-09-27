@@ -13,8 +13,9 @@ import {
 import {
   Del,
   deserialize,
-  MemoryFilesystemsStorageBase,
+  MemoryStorageBase,
   serialize,
+  TransactionStorageBase,
 } from "./storageHelper";
 
 const ARGS = {
@@ -90,68 +91,14 @@ class NodeFilesystemStorageBase extends StorageBase {
   }
 }
 
-class NodeFilesystemTransactionStorage extends StorageBase {
-  readonly _cacheStore = new MemoryFilesystemsStorageBase(["transaction"]);
+class NodeFilesystemTransactionStorage extends TransactionStorageBase {
   readonly _targetStore = new NodeFilesystemStorageBase(this.sourceTargetDir);
-  readonly _del = new Del();
   constructor(readonly sourceTargetDir: string) {
     super();
   }
   currentPaths: Storage.Paths = path
     .normalize(this.sourceTargetDir)
     .split(path.sep);
-  setBinary(paths: Storage.Paths, data: Uint8Array) {
-    return this._cacheStore.setBinary(paths, data);
-  }
-  async getBinary(paths: Storage.Paths) {
-    const binary = await this._cacheStore.getBinary(paths);
-    if (binary !== undefined) {
-      return binary;
-    }
-    if (this._del.isDel(paths)) {
-      return undefined;
-    }
-    return await this._targetStore.getBinary(paths);
-  }
-  async getJsObject<T>(paths: Storage.Paths) {
-    if (await this._cacheStore.has(paths)) {
-      return await this._cacheStore.getJsObject<T>(paths);
-    }
-    if (this._del.isDel(paths)) {
-      return undefined;
-    }
-    return await this._targetStore.getJsObject<T>(paths);
-  }
-  setJsObject<T>(paths: Storage.Paths, data: T) {
-    return this._cacheStore.setJsObject(paths, data);
-  }
-
-  async has(paths: Storage.Paths) {
-    if (await this._cacheStore.has(paths)) {
-      return true;
-    }
-    if (this._del.isDel(paths)) {
-      return false;
-    }
-    return await this._targetStore.has(paths);
-  }
-  async del(paths: Storage.Paths) {
-    /// 缓冲区没有可以删除的
-    if ((await this._cacheStore.del(paths)) === false) {
-      /// 判断遮罩是否已经已经删除过了
-      if (this._del.isDel(paths)) {
-        return false;
-      }
-    }
-    /// 往遮罩中添加删除的路径
-    this._del.addDel(paths);
-    return true;
-  }
-  listPaths(
-    paths: Storage.Paths,
-  ): BFChainUtil.PromiseMaybe<{ paths: Storage.Paths; files: Storage.Paths }> {
-    throw new Error("Method not implemented.");
-  }
 }
 
 class NodeFilesystemsStorage

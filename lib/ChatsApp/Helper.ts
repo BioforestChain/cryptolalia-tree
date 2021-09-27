@@ -27,5 +27,5 @@ export abstract class ChatsAppHelper<
   abstract handshakeSession?: <I extends CryptolaliaTypes.Msg.In<W>>(
     sessionId: string,
     swapIn?: I,
-  ) => BFChainUtil.PromiseMaybe<CryptolaliaTypes.Msg.GetOut<W, I> | void>;
+  ) => BFChainUtil.PromiseMaybe<CryptolaliaTypes.Msg.GetOut<W, I> | undefined>;
 }

@@ -11,75 +11,12 @@ import {
 import {
   Del,
   deserialize,
-  MemoryFilesystemsStorageBase,
+  MemoryStorageBase,
   serialize,
+  CONST,
+  PathParser,
+  TransactionStorageBase,
 } from "./storageHelper";
-
-const enum CONST {
-  PATH_SEP = "/",
-  FILE_TYPE_FLAG = 1,
-  DIR_TYPE_FLAG = 2,
-  ROOT_DIR = ":root:",
-}
-
-class PathParser {
-  readonly paths: Storage.Paths;
-  constructor(paths: Storage.Paths | string, cwd?: Storage.Paths | string) {
-    let isRoot = false;
-    if (typeof paths === "string") {
-      isRoot = paths.trimStart().startsWith("/");
-      paths = paths.split(CONST.PATH_SEP).map((slice) => slice.trim());
-    }
-    if (cwd !== undefined) {
-      if (typeof cwd === "string") {
-        cwd = cwd.split(CONST.PATH_SEP);
-      }
-      cwd = PathParser.normal(cwd.map((slice) => slice.trim()));
-
-      if (isRoot === false) {
-        const mergedPaths = cwd.concat(paths);
-        for (let i = 0; i > mergedPaths.length; ++i) {
-          const slice = mergedPaths[i];
-          if (slice === "..") {
-            mergedPaths.splice(i - 1, 2);
-            i -= 2;
-          }
-        }
-        paths = mergedPaths;
-      }
-
-      if (cwd.length > paths.length) {
-        throw new SyntaxError(`'${paths}' no belong to ${cwd}`);
-      }
-      for (let i = 0; i < cwd.length; ++i) {
-        if (cwd[i] !== paths[i]) {
-          throw new SyntaxError(`'${paths}' no belong to ${cwd}`);
-        }
-      }
-    }
-    this.paths = PathParser.normal(paths);
-  }
-
-  static normal(paths: Storage.Paths) {
-    return paths.filter(
-      (slice) => slice !== "" && slice.endsWith(".") === false,
-    );
-  }
-
-  get dirname() {
-    const parentPaths = this.paths.slice(0, -1);
-    if (parentPaths.length > 0) {
-      return parentPaths.join(CONST.PATH_SEP);
-    }
-    return CONST.ROOT_DIR;
-  }
-  get basename() {
-    return this.paths[this.paths.length - 1];
-  }
-  get fullpath() {
-    return this.paths.join(CONST.PATH_SEP);
-  }
-}
 
 const enum STORE_CONST {
   FILE = "file",
@@ -431,12 +368,10 @@ class IndexeddbFilesystemStorageBase extends StorageBase {
   }
 }
 
-class IndexeddbFilesystemTransactionStorage extends StorageBase {
-  readonly _cacheStore = new MemoryFilesystemsStorageBase(["transaction"]);
+class IndexeddbFilesystemTransactionStorage extends TransactionStorageBase {
   readonly _targetStore = new IndexeddbFilesystemStorageBase(
     this.sourceTargetDir,
   );
-  readonly _del = new Del();
   constructor(
     readonly sourceTargetDir: string,
     readonly idbName: string = "cryptolalia-tree-fs",
@@ -444,59 +379,6 @@ class IndexeddbFilesystemTransactionStorage extends StorageBase {
     super();
   }
   currentPaths: Storage.Paths = new PathParser(this.sourceTargetDir).paths;
-
-  setBinary(paths: Storage.Paths, data: Uint8Array) {
-    return this._cacheStore.setBinary(paths, data);
-  }
-  async getBinary(paths: Storage.Paths) {
-    const binary = await this._cacheStore.getBinary(paths);
-    if (binary !== undefined) {
-      return binary;
-    }
-    if (this._del.isDel(paths)) {
-      return undefined;
-    }
-    return await this._targetStore.getBinary(paths);
-  }
-  async getJsObject<T>(paths: Storage.Paths) {
-    if (await this._cacheStore.has(paths)) {
-      return await this._cacheStore.getJsObject<T>(paths);
-    }
-    if (this._del.isDel(paths)) {
-      return undefined;
-    }
-    return await this._targetStore.getJsObject<T>(paths);
-  }
-  setJsObject<T>(paths: Storage.Paths, data: T) {
-    return this._cacheStore.setJsObject(paths, data);
-  }
-
-  async has(paths: Storage.Paths) {
-    if (await this._cacheStore.has(paths)) {
-      return true;
-    }
-    if (this._del.isDel(paths)) {
-      return false;
-    }
-    return await this._targetStore.has(paths);
-  }
-  async del(paths: Storage.Paths) {
-    /// 缓冲区没有可以删除的
-    if ((await this._cacheStore.del(paths)) === false) {
-      /// 判断遮罩是否已经已经删除过了
-      if (this._del.isDel(paths)) {
-        return false;
-      }
-    }
-    /// 往遮罩中添加删除的路径
-    this._del.addDel(paths);
-    return true;
-  }
-  listPaths(
-    paths: Storage.Paths,
-  ): BFChainUtil.PromiseMaybe<{ paths: Storage.Paths; files: Storage.Paths }> {
-    throw new Error("Method not implemented.");
-  }
 }
 
 class IndexeddbFilesystemsStorage

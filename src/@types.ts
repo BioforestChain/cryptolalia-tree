@@ -11,12 +11,12 @@ export declare namespace CryptolaliaTypes {
   export type Msg<I = unknown, O = unknown> = { In: I; Out: O };
   namespace Msg {
     type InOut<S> = In<S> | Out<S>;
-    type In<S> = S extends Msg<infer I, infer _> ? I : never;
-    type Out<S> = S extends Msg<infer _, infer O> ? O : never;
+    type In<S> = S extends Msg<infer I, infer _> ? I : unknown;
+    type Out<S> = S extends Msg<infer _, infer O> ? O : unknown;
     type GetOut<S, I> = S extends Msg<infer In, infer O>
       ? I extends In
         ? O
-        : never
-      : never;
+        : unknown
+      : unknown;
   }
 }

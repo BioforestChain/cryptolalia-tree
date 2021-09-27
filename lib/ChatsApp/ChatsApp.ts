@@ -39,9 +39,9 @@ export class ChatsApp<
   private _ready = new PromiseOut<void>();
   constructor(
     readonly storage: Storage,
-    private _helper: ChatsAppHelper<S, D, W>,
+    readonly helper: ChatsAppHelper<S, D, W>,
+    readonly config: CryptolaliaConfig,
     private _timeHelper: TimeHelper,
-    private _config: CryptolaliaConfig,
     private _msgHelper: MessageHelper<D>,
     private _cryptoHelper: CryptoHelper,
   ) {
@@ -66,7 +66,7 @@ export class ChatsApp<
       }
     }
     this._sessionList = [...this._sessionMap.values()].sort((a, b) =>
-      this._helper.compare(a, b),
+      this.helper.compare(a, b),
     );
     this._ready.resolve();
   }
@@ -76,7 +76,7 @@ export class ChatsApp<
    */
   private async _initMessageListen() {
     await this._ready.promise;
-    this._helper.onNewMessage = async (msg) => {
+    this.helper.onNewMessage = async (msg) => {
       switch (msg[0]) {
         case CHATS_APP_MSG_TYPE.MSG:
           {
@@ -87,7 +87,7 @@ export class ChatsApp<
             const lalia = this._laliaMap.get(msg[1]);
             if (lalia !== undefined) {
               if (true === (await lalia.cryptolalia.addMsg(msg[2]))) {
-                await this.onNewMessage?.(msg);
+                await this.onNewMessage?.([msg[1], msg[2]]);
               }
             }
           }
@@ -102,7 +102,7 @@ export class ChatsApp<
           break;
         case CHATS_APP_MSG_TYPE.SESSION:
           {
-            await this._helper.handshakeSession?.(msg[1], msg[2]);
+            await this.helper.handshakeSession?.(msg[1], msg[2]);
           }
           break;
       }
@@ -112,7 +112,7 @@ export class ChatsApp<
     /**克隆一份列表，放置调整顺序带来的变动 */
     const sessionList = this._sessionList.slice();
     for (const sessionInfo of sessionList) {
-      const sessionId = this._helper.getSessionId(sessionInfo);
+      const sessionId = this.helper.getSessionId(sessionInfo);
       if (this._sessionMap.has(sessionId)) {
         const lalia = await this._getCryptolalia(sessionId);
         await lalia.cryptolalia.sync.doSync();
@@ -125,7 +125,7 @@ export class ChatsApp<
   private _sessionMap = new Map<string, S>();
   private _sessionList: S[] = [];
   private _doSort() {
-    this._sessionList.sort((a, b) => this._helper.compare(a, b));
+    this._sessionList.sort((a, b) => this.helper.compare(a, b));
   }
 
   private _orderChangeEntryCollection?: Map<
@@ -194,6 +194,7 @@ export class ChatsApp<
 
   /**添加一个会话 */
   async addSession(sessionId: string, sessionInfo: S) {
+    this._ready.is_resolved || (await this._ready.promise);
     if (this._sessionMap.has(sessionId)) {
       return false;
     }
@@ -212,22 +213,26 @@ export class ChatsApp<
     }
 
     /// 如果可以，发送握手信息
-    if (this._helper.handshakeSession !== undefined) {
-      const swap = await this._helper.handshakeSession(sessionId);
+    if (this.helper.handshakeSession !== undefined) {
+      const swap = await this.helper.handshakeSession(sessionId);
       if (swap !== undefined) {
-        await this._helper.sendMessage(sessionInfo, [
+        await this.helper.sendMessage(sessionInfo, [
           CHATS_APP_MSG_TYPE.SESSION,
           sessionId,
           swap,
         ]);
       }
     }
+
+    return true;
   }
-  getSessionInfo(sessionId: string): BFChainUtil.PromiseMaybe<S | undefined> {
+  async getSessionInfo(sessionId: string) {
+    this._ready.is_resolved || (await this._ready.promise);
     return this._sessionMap.get(sessionId);
   }
   /**修改一个会话的信息 */
   async updateSession(sessionId: string, sessionInfo: S) {
+    this._ready.is_resolved || (await this._ready.promise);
     const oldSessionInfo = this._sessionMap.get(sessionId);
     if (oldSessionInfo === undefined) {
       return false;
@@ -250,13 +255,13 @@ export class ChatsApp<
         sessionId,
       });
     }
+    return true;
   }
 
   onOrderChange?: ChatsApp.OrderChangeCallback<S>;
 
-  getSessionList(
-    query: { offset?: number; limit?: number } = {},
-  ): BFChainUtil.PromiseMaybe<S[]> {
+  async getSessionList(query: { offset?: number; limit?: number } = {}) {
+    this._ready.is_resolved || (await this._ready.promise);
     const { offset = 0, limit = Infinity } = query;
     return this._sessionList.slice(offset, limit + offset);
   }
@@ -277,7 +282,7 @@ export class ChatsApp<
           if (sessionInfo === undefined) {
             return;
           }
-          return this._helper.sendMessage(sessionInfo, [
+          return this.helper.sendMessage(sessionInfo, [
             CHATS_APP_MSG_TYPE.SYNC,
             sessionId,
             msg,
@@ -290,7 +295,7 @@ export class ChatsApp<
           [getInjectionToken(Storage)!, this.storage.fork([sessionId])],
           [CryptolaliaSync.ARGS.SYNC_CHANNE, syncChannel],
           [getInjectionToken(TimeHelper)!, this._timeHelper],
-          [getInjectionToken(CryptolaliaConfig)!, this._config],
+          [getInjectionToken(CryptolaliaConfig)!, this.config],
           [getInjectionToken(MessageHelper)!, this._msgHelper],
           [getInjectionToken(CryptoHelper)!, this._cryptoHelper],
         ]),
@@ -301,13 +306,14 @@ export class ChatsApp<
   }
 
   async sendMessage(sessionId: string, message: D) {
+    this._ready.is_resolved || (await this._ready.promise);
     const sessionInfo = this._sessionMap.get(sessionId);
     if (sessionInfo === undefined) {
       return false;
     }
     const lalia = this._getCryptolalia(sessionId);
     if (await lalia.cryptolalia.addMsg(message)) {
-      await this._helper.sendMessage(sessionInfo, [
+      await this.helper.sendMessage(sessionInfo, [
         CHATS_APP_MSG_TYPE.MSG,
         sessionId,
         message,
@@ -318,25 +324,36 @@ export class ChatsApp<
   }
 
   /**该函数与helper里的onNewMessage不一样，该函数时过滤掉垃圾、冗余信息后，真正需要发给用户的数据 */
-  onNewMessage?: ChatsApp.NewMessageCallback<D>;
+  onNewMessage?: ChatsApp.NewMessageCallback<[sessionId: string, message: D]>;
 
-  getMessageList(
+  async getMessageList(
     sessionId: string,
     query: {
       timestamp?: number;
       offset?: number;
       limit?: number;
-      order: ORDER;
+      order?: ORDER;
     },
   ) {
-    const lalia = this._laliaMap.get(sessionId);
-    if (lalia === undefined) {
+    this._ready.is_resolved || (await this._ready.promise);
+    if (this._sessionMap.has(sessionId) === false) {
       return [];
     }
+    const lalia = this._getCryptolalia(sessionId);
     return lalia.cryptolalia.getMsgList(
       query.timestamp ?? this._timeHelper.now(),
       query,
     );
+  }
+
+  async doSync(sessionId: string) {
+    this._ready.is_resolved || (await this._ready.promise);
+
+    if (this._sessionMap.has(sessionId) === false) {
+      return [];
+    }
+    const lalia = this._getCryptolalia(sessionId);
+    return lalia.cryptolalia.sync.doSync();
   }
   //#endregion
 }
