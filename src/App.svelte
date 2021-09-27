@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Router, Route, Link } from "svelte-routing";
+  import { Router, Route, Link, createHistory } from "svelte-navigator";
   import Room from "./lib/Room.svelte";
   import Online from "./lib/Online.svelte";
 
-  function getProps({ location, href, isPartiallyCurrent, isCurrent }) {
+  function getLinkProps({ location, href, isPartiallyCurrent, isCurrent }) {
     const isActive = href === "/" ? isCurrent : isPartiallyCurrent || isCurrent;
 
     // The object returned here is spread on the anchor element's attributes
@@ -12,14 +12,65 @@
     }
     return { class: "nav-item" };
   }
+
+  import { createHashHistory } from "history";
+  import { onDestroy } from "svelte";
+  import { get_current_component } from "svelte/internal";
+
+  function createHashSource() {
+    const history = createHashHistory({});
+    let listeners = [];
+
+    history.listen((location) => {
+      if (history.action === "POP") {
+        listeners.forEach((listener) => listener(location));
+      }
+    });
+
+    return {
+      get location() {
+        return history.location;
+      },
+      addEventListener(name, handler) {
+        if (name !== "popstate") return;
+        listeners.push(handler);
+      },
+      removeEventListener(name, handler) {
+        if (name !== "popstate") return;
+        listeners = listeners.filter((fn) => fn !== handler);
+      },
+      history: {
+        get state() {
+          return history.location.state;
+        },
+        pushState(state, title, uri) {
+          history.push(uri, state);
+        },
+        replaceState(state, title, uri) {
+          history.replace(uri, state);
+        },
+        go(to) {
+          history.go(to);
+        },
+      },
+    };
+  }
+
+  const memoryHistory = createHistory(createHashSource() as any);
+  onDestroy(() => {
+    console.log("destory");
+  });
+  export const destory = () => {
+    get_current_component().$destroy();
+  };
 </script>
 
-<Router>
+<Router history={memoryHistory}>
   <header>
     <h1>Cryptolalia Demo</h1>
     <nav>
-      <Link {getProps} to="/">Local Chat Demo</Link>
-      <Link {getProps} to="/online">Chat Online Demo</Link>
+      <Link getProps={getLinkProps} to="/">Local Chat Demo</Link>
+      <Link getProps={getLinkProps} to="/online">Chat Online Demo</Link>
     </nav>
   </header>
   <main>
@@ -29,7 +80,7 @@
     <Route path="/online">
       <p class="tip">
         提示：该DEMO使用BroadcastChannel模块网络广播，<a
-          href="/online"
+          href={location.href}
           target="_blank">打开更多同域页面</a
         >即可多账户登录
       </p>
@@ -101,10 +152,14 @@
       var(--overlay-color-1),
       var(--overlay-color-2)
     );
-    box-shadow: 3px 3px 6px #b2b2b2, -3px -3px 6px #ffffff;
+
+    --depth: 3px;
+    box-shadow: var(--depth) var(--depth) calc(2 * var(--depth)) #b2b2b2,
+      calc(-1 * var(--depth)) calc(-1 * var(--depth)) calc(2 * var(--depth))
+        #ffffff;
     cursor: pointer;
   }
-  :global(button:active, button.activing .button.activing) {
+  :global(button:active, button.activing, .button.activing) {
     --overlay-color-1: #c8c8c8;
     --overlay-color-2: #eeeeee;
     /* pointer-events: none; */

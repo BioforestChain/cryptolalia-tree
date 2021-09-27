@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "-postinstall": "npm link @bfchain/cryptolalia-tree",
     "dev": "vite",
     "build": "vite build",
+    "dev:dist": "vite build --watch --minify=false",
     "serve": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
@@ -19,6 +21,7 @@
     "vite": "^2.5.1"
   },
   "dependencies": {
-    "svelte-routing": "^1.6.0"
+    "history": "^5.0.1",
+    "svelte-navigator": "^3.1.5"
   }
 }

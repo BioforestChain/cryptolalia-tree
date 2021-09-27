@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { fly } from "svelte/transition";
-
   import { onMount } from "svelte";
-
-  import type { MyMessage } from "./cryptolalia";
+  import { fly } from "svelte/transition";
+  import type { MyMessage } from "./superCryptolalia";
   let list: MyMessage[] = [];
   let wordToSend = "";
 
@@ -42,6 +40,15 @@
       syncing = false;
     }
   };
+  const _doClear = async () => {
+    syncing = true;
+    try {
+      await doClear();
+      list = await getList();
+    } finally {
+      syncing = false;
+    }
+  };
   export let doSend: (text: string) => BFChainUtil.PromiseMaybe<unknown> = (
     text: string,
   ) => {};
@@ -49,6 +56,7 @@
   export let getList: () => BFChainUtil.PromiseMaybe<MyMessage[]> = () => {
     return [];
   };
+  export let doClear: () => BFChainUtil.PromiseMaybe<void> = () => {};
   export let isSelf = (sender: string) => {
     return false;
   };
@@ -95,7 +103,7 @@
     </li>
   {/each}
 </ul>
-<div class="controller-panel">
+<div class="msgcontroller-panel">
   <input
     type="text"
     class="word-to-send"
@@ -106,8 +114,13 @@
   <button class="do-send" class:activing={sending} on:click={_doSend}
     >发送</button
   >
+</div>
+<div class="controller-panel">
   <button class="do-sync" class:activing={syncing} on:click={_doSync}
     >同步</button
+  >
+  <button class="do-sync" class:activing={syncing} on:click={_doClear}
+    >清空</button
   >
 </div>
 
@@ -180,6 +193,7 @@
     border-radius: 100%;
     background: #e0e0e0;
     box-shadow: 3px 3px 6px #bebebe, -3px -3px 6px #ffffff;
+    overflow: hidden;
   }
   .self .content-area {
     flex-direction: row-reverse;
@@ -190,11 +204,29 @@
     color: #2196f3;
   }
 
+  .msgcontroller-panel {
+    display: flex;
+    flex-direction: row;
+    margin-top: 0.5em;
+  }
+  .msgcontroller-panel input {
+    flex: 1;
+  }
+  .msgcontroller-panel button {
+    margin-left: 0.8em;
+    --depth: 1px;
+  }
   .controller-panel {
     display: flex;
     flex-direction: row;
+    margin-top: 0.5em;
+  }
+  .controller-panel button:first-child {
+    margin-left: 0;
   }
   .controller-panel button {
+    flex: 1;
     margin-left: 0.8em;
+    --depth: 1px;
   }
 </style>

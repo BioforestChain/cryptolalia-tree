@@ -1,14 +1,13 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-
-  import { cryptolalia1, cryptolalia2, MyMessage } from "./cryptolalia";
   import Chat from "./Chat.svelte";
-  import type { Cryptolalia } from "@bfchain/cryptolalia-tree";
-
-  const SendMsgFactory = (
-    sender: string,
-    cryptolalia: Cryptolalia<MyMessage>,
-  ) => {
+  import {
+    cryptolalia1,
+    cryptolalia2,
+    MyMessage,
+    SuperCryptolalia,
+  } from "./superCryptolalia";
+  const SendMsgFactory = (sender: string, cryptolalia: SuperCryptolalia) => {
     return (text: string) => {
       return cryptolalia.addMsg({
         content: text,
@@ -17,14 +16,14 @@
       });
     };
   };
-  const SyncMsgFactory = (cryptolalia: Cryptolalia<MyMessage>) => {
+  const SyncMsgFactory = (cryptolalia: SuperCryptolalia) => {
     return async () => {
       console.group("do sync");
-      await cryptolalia.sync.doSync();
+      await cryptolalia.doSync();
       console.groupEnd();
     };
   };
-  const ListMsgFactory = (cryptolalia: Cryptolalia<MyMessage>) => {
+  const ListMsgFactory = (cryptolalia: SuperCryptolalia) => {
     return async () => {
       const list: MyMessage[] = [];
       for (const item of await cryptolalia.getMsgList(Date.now(), {
@@ -49,14 +48,33 @@
 
   const isSelf1 = (sender) => sender === "user1";
   const isSelf2 = (sender) => sender === "user2";
+
+  const clear1 = () => {
+    return cryptolalia1.clear();
+  };
+  const clear2 = () => {
+    return cryptolalia2.clear();
+  };
 </script>
 
 <main class="chat-panels" in:fade>
   <section class="chat-panel panel-1">
-    <Chat doSend={sendMsg1} doSync={sync1} getList={list1} isSelf={isSelf1} />
+    <Chat
+      doSend={sendMsg1}
+      doSync={sync1}
+      getList={list1}
+      isSelf={isSelf1}
+      doClear={clear1}
+    />
   </section>
   <section class="chat-panel panel-2">
-    <Chat doSend={sendMsg2} doSync={sync2} getList={list2} isSelf={isSelf2} />
+    <Chat
+      doSend={sendMsg2}
+      doSync={sync2}
+      getList={list2}
+      isSelf={isSelf2}
+      doClear={clear2}
+    />
   </section>
 </main>
 

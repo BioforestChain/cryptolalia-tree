@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade, scale } from "svelte/transition";
   import Chat from "./Chat.svelte";
-  import { ChatsAppBuilder, MySessionInfo } from "./cryptolalia";
+  import { ChatsAppBuilder, MySessionInfo } from "./superCryptolalia";
   type ChatsApp = ReturnType<typeof ChatsAppBuilder>;
   let chatsApp: ChatsApp | undefined;
   let username = "";
@@ -177,12 +177,12 @@
               </div>
             {:else if sessionInfo.lastMsgPreview}
               <div class="last-msg" in:scale={{ duration: 300 }}>
-                  <span class="msg-preview">{sessionInfo.lastMsgPreview}</span>
-                  <span class="msg-time"
-                    >{new Date(
-                      sessionInfo.lastMsgTime,
-                    ).toLocaleTimeString()}</span
-                  >
+                <span class="msg-preview">{sessionInfo.lastMsgPreview}</span>
+                <span class="msg-time"
+                  >{new Date(
+                    sessionInfo.lastMsgTime,
+                  ).toLocaleTimeString()}</span
+                >
               </div>
             {/if}
           </li>
@@ -209,7 +209,7 @@
     box-shadow: 3px 3px 6px #bebebe, -3px -3px 6px #ffffff;
     margin-top: 1em;
     min-height: 3em;
-    width: 18em;
+    min-width: 18em;
     box-sizing: border-box;
     padding: 0.25em 1em;
   }
@@ -220,6 +220,13 @@
   }
   .base-info .nickname {
     display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .base-info .start-chat-btn {
+    --depth: 1px;
   }
 
   .base-info .badge {
