@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { fly } from "svelte/transition";
+
   import { onMount } from "svelte";
 
   import type { MyMessage } from "./cryptolalia";
@@ -26,6 +28,7 @@
     }
   };
 
+  let isFirst = true;
   let syncing = false;
   const _doSync = async () => {
     if (syncing) {
@@ -50,11 +53,40 @@
     return false;
   };
   onMount(_doSync);
+
+  export const onListChanged = () => {
+    return _doSync();
+  };
+  function bindEvents(element, events) {
+    const listeners = Object.entries(events).map(([event, handler]) => {
+      const listener = element.addEventListener(event, handler);
+
+      return [event, listener];
+    });
+
+    return {
+      destroy() {
+        listeners.forEach(([event, listener]) => {
+          element.removeEventListener(event, listener);
+        });
+      },
+    };
+  }
 </script>
 
-<ul class="list">
-  {#each list as item (item.time)}
-    <li class="item" class:self={isSelf(item.sender)}>
+<ul class="list" class:syncing>
+  {#each list as item, index (item.time)}
+    <li
+      class="item"
+      class:self={isSelf(item.sender)}
+      in:fly={{
+        delay: Math.log2(index + 1) * 100,
+        duration: 300,
+        y: isFirst ? -50 : 50,
+        opacity: 0,
+      }}
+      use:bindEvents={index === 0 ? { introend: () => (isFirst = false) } : {}}
+    >
       <span class="time-tip">{new Date(item.time).toLocaleTimeString()}</span>
       <div class="content-area">
         <address class="avator">{item.sender}</address>
@@ -71,10 +103,10 @@
     bind:value={wordToSend}
     placeholder="请输入要发送的内容"
   />
-  <button class="do-send" class:running={sending} on:click={_doSend}
+  <button class="do-send" class:activing={sending} on:click={_doSend}
     >发送</button
   >
-  <button class="do-sync" class:running={syncing} on:click={_doSync}
+  <button class="do-sync" class:activing={syncing} on:click={_doSync}
     >同步</button
   >
 </div>
@@ -89,13 +121,19 @@
 
     display: flex;
     flex-direction: column-reverse;
-    max-height: 20em;
+    height: 20em;
     overflow: auto;
     scrollbar-gutter: stable;
+  }
+  .list:empty {
+    justify-content: center;
   }
   .list:empty::before {
     content: "暂无内容";
     opacity: 0.3;
+  }
+  .list.syncing::before {
+    content: "加载中";
   }
   .list .item {
     list-style: none;
@@ -158,50 +196,5 @@
   }
   .controller-panel button {
     margin-left: 0.8em;
-  }
-
-  @property --overlay-color-1 {
-    syntax: "<color>";
-    inherits: false;
-    initial-value: black;
-  }
-  @property --overlay-color-2 {
-    syntax: "<color>";
-    inherits: false;
-    initial-value: white;
-  }
-
-  input {
-    padding: 0.5em 0.5em;
-    border: none;
-    border-radius: 0.25em;
-    background: #e0e0e0;
-    box-shadow: inset 3px 3px 6px #bebebe, inset -3px -3px 6px #ffffff;
-  }
-  input:focus-visible {
-    outline: 1px #fff;
-    outline-style: outset;
-  }
-  button {
-    padding: 0.25em 0.8em;
-    border: none;
-    transition-property: --overlay-color-1, --overlay-color-2;
-    transition-duration: 0.5s;
-    transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
-    border-radius: 0.25em;
-    --overlay-color-1: #eeeeee;
-    --overlay-color-2: #c8c8c8;
-    background: linear-gradient(
-      145deg,
-      var(--overlay-color-1),
-      var(--overlay-color-2)
-    );
-    box-shadow: 3px 3px 6px #b2b2b2, -3px -3px 6px #ffffff;
-    cursor: pointer;
-  }
-  button:active,
-  button.running {
-    --overlay-color-1: #c8c8c8;
-    --overlay-color-2: #eeeeee;
   }
 </style>

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
 import { inspect } from "node:util";
 import typescript from "typescript";
 
@@ -36,6 +37,9 @@ export default defineConfig({
       return {
         name: "tsc.emitDecoratorMetadata",
         load(source) {
+          if (!source.endsWith(".ts")) {
+            return null;
+          }
           if (!parsedTsConfig?.compilerOptions?.emitDecoratorMetadata) {
             return null;
           }
@@ -59,7 +63,7 @@ export default defineConfig({
               return null;
             }
 
-            // console.log("need emitDecoratorMetadata", source);
+            console.log("need emitDecoratorMetadata", source);
             const program = typescript.transpileModule(ts, parsedTsConfig);
             // console.log(program.outputText);
             return program.outputText;

@@ -1,4 +1,10 @@
-import { Inject, ModuleStroge, Resolve } from "@bfchain/util-dep-inject";
+import {
+  getInjectionToken,
+  Inject,
+  ModuleStroge,
+  OnInit,
+  Resolve,
+} from "@bfchain/util-dep-inject";
 import {
   Cryptolalia,
   CryptolaliaConfig,
@@ -137,122 +143,172 @@ export const test = async () => {
   await cryptolalia2.sync.doSync();
   console.log("sync done");
 };
-
-const appModuleMap1 = new ModuleStroge([], moduleMap);
-const appModuleMap2 = new ModuleStroge([], moduleMap);
-type MySessionInfo = {
+export type MySessionInfo = {
   nickname: string;
   badge: number;
   lastMsgPreview: string;
   lastMsgTime: number;
   isCollection: boolean;
 };
-{
-  type AppChannel = CryptolaliaTypes.MessageChannel<
-    ChatsApp.ChatsMsg<MySessionInfo, CryptolaliaTypes.Msg<MyMessage>>
-  >;
-  const appChannel1: AppChannel = {
-    postMessage(msg) {},
-    get onMessage() {
-      return appChannel2.postMessage;
-    },
-    set onMessage(cb) {
-      appChannel2.postMessage = cb;
-    },
-  };
-  const appChannel2: AppChannel = {
-    postMessage(msg) {},
-    get onMessage() {
-      return appChannel1.postMessage;
-    },
-    set onMessage(cb) {
-      appChannel1.postMessage = cb;
-    },
-  };
-  const APP_CHANNEL = Symbol("appChannel");
-  appModuleMap1.set(APP_CHANNEL, appChannel1);
-  appModuleMap2.set(APP_CHANNEL, appChannel2);
+export type SwapMsg =
+  | CryptolaliaTypes.Msg<undefined, { senderId: string }>
+  | CryptolaliaTypes.Msg<{ senderId: string }, undefined>;
+export const ChatsAppBuilder = (username: string) => {
+  const appModuleMap = new ModuleStroge([], moduleMap);
 
-  const LOCAL_NAME_ID = Symbol("localId");
-  appModuleMap1.set(LOCAL_NAME_ID, "app1");
-  appModuleMap2.set(LOCAL_NAME_ID, "app2");
+  {
+    type MyChatsMsg = ChatsApp.ChatsMsg<
+      MySessionInfo,
+      CryptolaliaTypes.Msg<MyMessage>
+    >;
 
-  class MyChatsAppHelper extends ChatsAppHelper<
+    const LOCAL_NAME_ID = Symbol("localId");
+    appModuleMap.set(LOCAL_NAME_ID, username);
+
+    class MyChatsAppHelper
+      extends ChatsAppHelper<MySessionInfo, MyMessage, SwapMsg>
+      implements OnInit
     {
-      nickname: string;
-      badge: number;
-      lastMsgPreview: string;
-      lastMsgTime: number;
-      isCollection: boolean;
-    },
-    MyMessage
-  > {
-    handshakeSession?: <I extends unknown>(
-      sessionId: string,
-      swapIn?: I,
-    ) => BFChainUtil.PromiseMaybe<void | (I extends unknown ? unknown : never)>;
-    @Inject(APP_CHANNEL)
-    appChannel!: AppChannel;
-    @Inject(LOCAL_NAME_ID)
-    localId!: string;
+      @Inject(LOCAL_NAME_ID)
+      readonly localId!: string;
 
-    getSessionId(sessionInfo: {
-      nickname: string;
-      badge: number;
-      lastMsgPreview: string;
-      lastMsgTime: number;
-      isCollection: boolean;
-    }): string {
-      return [this.localId, sessionInfo.nickname].sort().join("-");
-    }
-    compare(
-      a: {
+      getSessionId(sessionInfo: {
         nickname: string;
         badge: number;
         lastMsgPreview: string;
         lastMsgTime: number;
         isCollection: boolean;
-      },
-      b: {
-        nickname: string;
-        badge: number;
-        lastMsgPreview: string;
-        lastMsgTime: number;
-        isCollection: boolean;
-      },
-    ): number {
-      if (a.isCollection && !b.isCollection) {
-        return -1;
+      }): string {
+        return [this.localId, sessionInfo.nickname].sort().join("-");
       }
-      if (b.isCollection && !a.isCollection) {
-        return 1;
+      compare(
+        a: {
+          nickname: string;
+          badge: number;
+          lastMsgPreview: string;
+          lastMsgTime: number;
+          isCollection: boolean;
+        },
+        b: {
+          nickname: string;
+          badge: number;
+          lastMsgPreview: string;
+          lastMsgTime: number;
+          isCollection: boolean;
+        },
+      ): number {
+        if (a.isCollection && !b.isCollection) {
+          return -1;
+        }
+        if (b.isCollection && !a.isCollection) {
+          return 1;
+        }
+        return b.lastMsgTime - a.lastMsgTime;
       }
-      return b.lastMsgTime - a.lastMsgTime;
+      sendMessage(
+        sessionInfo: {
+          nickname: string;
+          badge: number;
+          lastMsgPreview: string;
+          lastMsgTime: number;
+          isCollection: boolean;
+        },
+        msg: ChatsApp.SessionMsg<
+          MyMessage,
+          CryptolaliaTypes.Msg<unknown, unknown>
+        >,
+      ) {
+        this.bchanne.postMessage(["chatsApp", sessionInfo.nickname, msg]);
+      }
+      private bchanne = new BroadcastChannel("chatsApp");
+      bfOnInit() {
+        this.bchanne.addEventListener("message", (event) => {
+          console.log("event", event.data);
+          if (this.onNewMessage === undefined) {
+            return;
+          }
+          const { data } = event;
+          if (
+            Array.isArray(data) &&
+            data.length === 3 &&
+            data[0] === "chatsApp" &&
+            data[1] === this.localId
+          ) {
+            this.onNewMessage(data[2]);
+          }
+        });
+      }
+      onNewMessage?: CryptolaliaTypes.MessageChannel.Callback<MyChatsMsg>;
+
+      @Inject(ChatsApp)
+      app!: ChatsApp<MySessionInfo, MyMessage, SwapMsg>;
+
+      handshakeSession = async <I extends CryptolaliaTypes.Msg.In<SwapMsg>>(
+        sessionId: string,
+        swapIn?: I,
+      ) => {
+        if (swapIn === undefined) {
+          return { senderId: this.localId };
+        } else {
+          await this.app.addSession(sessionId, {
+            nickname: swapIn.senderId,
+            badge: 0,
+            lastMsgPreview: "",
+            lastMsgTime: Date.now(),
+            isCollection: false,
+          });
+          return;
+        }
+        throw new Error("Wrong handshake progress");
+      };
+
+      // handshakeSession<I extends CryptolaliaTypes.Msg.In<>>(
+      //   sessionId: string,
+      //   swapIn?: I,
+      // ){
+      //   if (swapIn === undefined) {
+      //     return { senderId: this.localId };
+      //   }
+      // }
+      // handshakeSession?: <I extends unknown>(sessionId: string, swapIn?: I) => BFChainUtil.PromiseMaybe<void | (I extends unknown ? unknown : never)>;
     }
-    sendMessage(
-      sessionInfo: {
-        nickname: string;
-        badge: number;
-        lastMsgPreview: string;
-        lastMsgTime: number;
-        isCollection: boolean;
-      },
-      msg: ChatsApp.SessionMsg<
-        MyMessage,
-        CryptolaliaTypes.Msg<unknown, unknown>
-      >,
-    ): unknown {
-      throw new Error("Method not implemented.");
-    }
-    public get onNewMessage() {
-      return this.appChannel.onMessage;
-    }
-    public set onNewMessage(value) {
-      this.appChannel.onMessage = value;
-    }
-    // handshakeSession?: <I extends unknown>(sessionId: string, swapIn?: I) => BFChainUtil.PromiseMaybe<void | (I extends unknown ? unknown : never)>;
+    console.log("MyChatsAppHelper", getInjectionToken(MyChatsAppHelper));
+    Resolve(MyChatsAppHelper, appModuleMap);
   }
-  Resolve(MyChatsAppHelper, moduleMap);
-}
-export const chatsApp1 = Resolve(ChatsApp, appModuleMap1);
-export const chatsApp2 = Resolve(ChatsApp, appModuleMap2);
+  {
+    Resolve(
+      FilesystemStorage,
+      appModuleMap.installMask(
+        new ModuleStroge([
+          [FilesystemStorage.ARGS.TARGET_DIR, "online-" + username],
+        ]),
+      ),
+    );
+  }
+  const chatsApp = Resolve<ChatsApp<MySessionInfo, MyMessage, SwapMsg>>(
+    ChatsApp,
+    appModuleMap,
+  );
+  return chatsApp;
+};
+//   type AppChannel = CryptolaliaTypes.MessageChannel<
+//     ChatsApp.ChatsMsg<MySessionInfo, CryptolaliaTypes.Msg<MyMessage>>
+//   >;
+//   const appChannel1: AppChannel = {
+//     postMessage(msg) {},
+//     get onMessage() {
+//       return appChannel2.postMessage;
+//     },
+//     set onMessage(cb) {
+//       appChannel2.postMessage = cb;
+//     },
+//   };
+//   const appChannel2: AppChannel = {
+//     postMessage(msg) {},
+//     get onMessage() {
+//       return appChannel1.postMessage;
+//     },
+//     set onMessage(cb) {
+//       appChannel1.postMessage = cb;
+//     },
+//   };

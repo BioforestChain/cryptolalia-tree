@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { fade } from "svelte/transition";
+
   import { cryptolalia1, cryptolalia2, MyMessage } from "./cryptolalia";
   import Chat from "./Chat.svelte";
   import type { Cryptolalia } from "@bfchain/cryptolalia-tree";
@@ -49,7 +51,7 @@
   const isSelf2 = (sender) => sender === "user2";
 </script>
 
-<main class="chat-panels">
+<main class="chat-panels" in:fade>
   <section class="chat-panel panel-1">
     <Chat doSend={sendMsg1} doSync={sync1} getList={list1} isSelf={isSelf1} />
   </section>
@@ -64,6 +66,7 @@
     flex-direction: row;
     width: 100%;
     justify-content: space-around;
+    flex-wrap: wrap;
   }
   .chat-panel {
     padding: 1em;
