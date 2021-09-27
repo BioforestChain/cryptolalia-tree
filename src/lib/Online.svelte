@@ -209,7 +209,7 @@
     box-shadow: 3px 3px 6px #bebebe, -3px -3px 6px #ffffff;
     margin-top: 1em;
     min-height: 3em;
-    width: 18em;
+    min-width: 18em;
     box-sizing: border-box;
     padding: 0.25em 1em;
   }
@@ -220,6 +220,13 @@
   }
   .base-info .nickname {
     display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .base-info .start-chat-btn {
+    --depth: 1px;
   }
 
   .base-info .badge {

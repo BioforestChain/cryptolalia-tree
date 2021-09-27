@@ -180,6 +180,7 @@
     border-radius: 100%;
     background: #e0e0e0;
     box-shadow: 3px 3px 6px #bebebe, -3px -3px 6px #ffffff;
+    overflow: hidden;
   }
   .self .content-area {
     flex-direction: row-reverse;
@@ -193,8 +194,13 @@
   .controller-panel {
     display: flex;
     flex-direction: row;
+    margin-top: 0.5em;
+  }
+  .controller-panel input {
+    flex: 1;
   }
   .controller-panel button {
     margin-left: 0.8em;
+    --depth: 1px;
   }
 </style>

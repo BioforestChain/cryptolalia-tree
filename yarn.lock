@@ -9,6 +9,61 @@
   dependencies:
     "regenerator-runtime" "^0.13.4"
 
+"@bfchain/bnrtc2-buffer-typings@^0.0.1-alpha.6":
+  "integrity" "sha512-FuZmhZCr9FKdCB9cboJiLwlGFq0JHkh365Tu08lbo76y6cmaq+Mu8ep98koFI82W/01baCWKLpRuA9qGHAijZw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-buffer-typings/-/bnrtc2-buffer-typings-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+
+"@bfchain/bnrtc2-buffer@^0.0.1-alpha.6":
+  "integrity" "sha512-BYMf+ifPPTu3mYHhzdBQKYt2HVexpb88udjO8d9f3wgvUPLjuKg0rNtt8wjRRO+jJQKoPtFEFYs1SDCOGr1b5A=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-buffer/-/bnrtc2-buffer-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+  dependencies:
+    "@bfchain/bnrtc2-buffer-typings" "^0.0.1-alpha.6"
+    "@bfchain/util-encoding-utf8" "^0.0.1-alpha.4"
+
+"@bfchain/bnrtc2-client-api@^0.0.1-alpha.6":
+  "integrity" "sha512-LRnCNj8K/I4gZ8QjZ/2S8AGppjkOezBYOpiBf31OKT5uBzTQY3aJBijuVlQOUWY5OQGWVcLhEem5XO7ONHp4BA=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-client-api/-/bnrtc2-client-api-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+  dependencies:
+    "@bfchain/bnrtc2-client-typings" "^0.0.1-alpha.6"
+
+"@bfchain/bnrtc2-client-typings@^0.0.1-alpha.6":
+  "integrity" "sha512-MyypD1uJQHXILHhAe/tH8F6QYoU147WTFaKd9X1u41YIxf/gXIBvAJjj6W8PWjH7VEFOvcn3PrdwtOZbDHbJKg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-client-typings/-/bnrtc2-client-typings-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+  dependencies:
+    "@bfchain/bnrtc2-buffer" "^0.0.1-alpha.6"
+
+"@bfchain/bnrtc2-client@^0.0.1-alpha.6":
+  "integrity" "sha512-reAaw6AUuLxA3oxzIysp22RiKrttHCHZTL7y08KhhoqTDQJD9ImezJ4hTvsfV6lQXqoT9ptTzR2BhK85KxBEXQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-client/-/bnrtc2-client-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+  dependencies:
+    "@bfchain/bnrtc2-buffer" "^0.0.1-alpha.6"
+    "@bfchain/bnrtc2-client-api" "^0.0.1-alpha.6"
+    "@bfchain/bnrtc2-client-typings" "^0.0.1-alpha.6"
+    "@bfchain/util-extends-promise" "0.0.1-alpha.4"
+    "@bfcs/util-evt" "0.0.1-alpha.1"
+
+"@bfchain/bnrtc2-dchat-typings@^0.0.1-alpha.6":
+  "integrity" "sha512-+3B3UqNuaDavMkDPdA55oAdDk3JYXRZzd9d6T8Y3FeBRA13cjrAaEahi5IFBQPxl11lyI4ieIWVBX/OOVrFlAQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-dchat-typings/-/bnrtc2-dchat-typings-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+  dependencies:
+    "@bfchain/bnrtc2-client-typings" "^0.0.1-alpha.6"
+
+"@bfchain/bnrtc2-dchat@^0.0.1-alpha.6":
+  "integrity" "sha512-7npuwE4/aphhRUgG6N/GAYUqdL1ZjCDQjFnj9aXZeK/ocburZxW8bQ7ht95S3E9LGbjlIVdpUKrnPmSa0AKqJQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/bnrtc2-dchat/-/bnrtc2-dchat-0.0.1-alpha.6.tgz"
+  "version" "0.0.1-alpha.6"
+  dependencies:
+    "@bfchain/bnrtc2-buffer" "^0.0.1-alpha.6"
+    "@bfchain/bnrtc2-client" "^0.0.1-alpha.6"
+    "@bfchain/bnrtc2-dchat-typings" "^0.0.1-alpha.6"
+    "@bfchain/util" "0.0.1-alpha.4"
+
 "@bfchain/cryptolalia-tree@file:..":
   "resolved" "file:.."
   "version" "1.3.2"
@@ -16,6 +71,354 @@
     "@bfchain/util" "^0.0.1-alpha.4"
     "idb" "^6.1.4"
     "js-yaml" "^4.1.0"
+
+"@bfchain/util-aborter@0.0.1-alpha.4":
+  "integrity" "sha512-vsydqak2vHdlP9WMXTNSqz1CqP+0xr25ROcwHUEBv8MXanLRZc3Kgv91KwcUt223QWU9KdKs+hsHjE5t0IuRzw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-aborter/-/util-aborter-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise-safe" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-buffer@0.0.1-alpha.4":
+  "integrity" "sha512-Cj1aeRpeJZtJEsF/m3E/3zzuO8Ivhrg3rhH0emz5FcPY62u3/IasyDEV6+Fb+etJ4G4AftuZ2zddtRiCzJ/zsQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-buffer/-/util-buffer-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-decorator@*", "@bfchain/util-decorator@0.0.1-alpha.4":
+  "integrity" "sha512-K/RBBio9UQ5x54ETcYX75wH4BqzELi3Q52h8nsQB2RQ28BxN6UMPcJbXQLanHyDewjDx2eudKlZ7A++VFzdcHQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-decorator/-/util-decorator-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-deepcopy@0.0.1-alpha.4":
+  "integrity" "sha512-t5nnl18YpIhxN7okOvmri6o/JiZbJEbSejBvYGaLTQC+NJnhhK4aBKx3PPzAUB57pwDJmhTTK8aHX/maJ5oS2w=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-deepcopy/-/util-deepcopy-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-type-detect" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-deepmix@0.0.1-alpha.4":
+  "integrity" "sha512-ZiGWmUBgR9Jg4+VEJMGJxqavwK017PiDMmKp79+UqLQOWHELOcWlf5t1AgXmtLYJS6Y8hc8IoHP7YDEpLYX6Lg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-deepmix/-/util-deepmix-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-dep-inject@0.0.1-alpha.4":
+  "integrity" "sha512-qXqIZ45yCPASvAebsckq7dVWBKQHZSa3Pb4YKcOUbLnwFeXm/v2rMeBUzxtWQhqMy/W0l7RpxLihfJ621xCBUg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-dep-inject/-/util-dep-inject-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-extends-map" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+    "reflect-metadata" "^0.1.13"
+
+"@bfchain/util-encoding-binary@0.0.1-alpha.4":
+  "integrity" "sha512-Fa5RIzAgTswvI4oD3BNqZb90ju8bE4uMRs6ey2SWXy6aeXsCP/IbtiSyYWyBI934viJHrdQx0rNtmGL2w1mYYQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-encoding-binary/-/util-encoding-binary-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-encoding-hex@0.0.1-alpha.4":
+  "integrity" "sha512-5f1SDIRxj9j3wAlMYJjfg5jSVJHnEyoDcrlCrtDRZ56j88OrNDvSgBHUf7gESEMCHoa4MQaMtRgVggk9rkn5pg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-encoding-hex/-/util-encoding-hex-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-encoding-utf8@^0.0.1-alpha.4", "@bfchain/util-encoding-utf8@0.0.1-alpha.4":
+  "integrity" "sha512-QO3T1w8GIVIabnJtANjfXkGwtZ0Jvyjb3Rg3UJ/czMkxA4gqYAt/vFojwEDk0n3k6NOQM5uB9IZdK9Ja50pFqw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-encoding-utf8/-/util-encoding-utf8-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-env@0.0.1-alpha.4":
+  "integrity" "sha512-dlAg2k6No9vNtRBMgkm8e+Su/bXdOxlgUMUaAslUGYaWdirVkdG1sBQ4NxmiwHCgwsc4bU9beIow/QIzhd7wOw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-env/-/util-env-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-platform" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-event-base@0.0.1-alpha.4":
+  "integrity" "sha512-TnILJ4GFtZVQ9/zamvcRFqlKpRFYn7PAUWX4bqzOK92YXyHCYHbAzTvKijiMNv22/hbrxIELdqT0bh7MVgl8hA=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-event-base/-/util-event-base-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-env" "0.0.1-alpha.4"
+    "@bfchain/util-extends-error" "0.0.1-alpha.4"
+    "@bfchain/util-extends-function" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-event-map-emitter@0.0.1-alpha.4":
+  "integrity" "sha512-DSeeihwMZUebZXW/pvls99Sdt+XpPzcpRrwOsD73Tv5BGefdrC82wkNZX09jcVeeqgOyeEwYgkX8Foyz9vb8tw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-event-map-emitter/-/util-event-map-emitter-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-event-base" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-event-quene-emitter@0.0.1-alpha.4":
+  "integrity" "sha512-S4C/zefVYzM4ZpE4KvIowlsE/Uab1i9HBeVPbuNc9NgpGuoISRx1EcF2NWyJjEBLf7IxajNNrpzao2cg5pfrsw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-event-quene-emitter/-/util-event-quene-emitter-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-env" "0.0.1-alpha.4"
+    "@bfchain/util-event-base" "0.0.1-alpha.4"
+    "@bfchain/util-extends-error" "0.0.1-alpha.4"
+    "@bfchain/util-extends-function" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-event@0.0.1-alpha.4":
+  "integrity" "sha512-vspPDw8TDlsU7QvnJ8pqgALrGqnG81JZToJeod+a/4izwHP0dzYaHwsgYK6GZSlFvDj+wgIcajzLwvzj5L+AxQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-event/-/util-event-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-event-base" "0.0.1-alpha.4"
+    "@bfchain/util-event-map-emitter" "0.0.1-alpha.4"
+    "@bfchain/util-event-quene-emitter" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-exception@0.0.1-alpha.4":
+  "integrity" "sha512-J9L9JQG+KX//RBmgR/bEW0cQFpeJRshnwkjJLvIBK3JpZuHY9ZOyVEJ7I3U2SHaFJ2hPOlkKfigmfTtqMyfAqA=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-exception/-/util-exception-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-dep-inject" "0.0.1-alpha.4"
+    "@bfchain/util-extends-error" "0.0.1-alpha.4"
+    "@bfchain/util-logger" "0.0.1-alpha.4"
+    "@bfchain/util-platform" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-error@0.0.1-alpha.4":
+  "integrity" "sha512-pX01dMoePuj78bCmlWAcUd8BYUKHxxAMnahxriKq+Y9G14uKEOOQoP2w7kpYb+X2sXnK5DsI2rGq7m5nT6W1wg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-error/-/util-extends-error-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-function@0.0.1-alpha.4":
+  "integrity" "sha512-DJ8cHBgk0IRQTYCbah0P+Ilo1EFepRTzFkTeAmYm7vMFUDytfbZbGMMnhX6qAlj+E1sL/0BblCNZ/dQUs113eA=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-function/-/util-extends-function-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-iterator@0.0.1-alpha.4":
+  "integrity" "sha512-1EmvWZPOvSAFEBKidPKCeeHgKjgE9tLkDpZkQaqi7gDC7n/8CqYuBXZWRLHY5vYj2z+nrBOW5FhXLcgkDLgixQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-iterator/-/util-extends-iterator-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-map@0.0.1-alpha.4":
+  "integrity" "sha512-fhcgAqTjDsi1LDU8i3/qFKJ+VL4hPFv2R2GG3Fqdu7a5lNkZwPR7CnH/HCw1spWbctszttcmmXIlKGo/fGEFIw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-map/-/util-extends-map-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-promise-out@0.0.1-alpha.4":
+  "integrity" "sha512-3Oxx4Um7peFZd5F+RgcEvjInePw5u10xU8OhwSsWWggtfWXDCyXg+9KgK4XP2ALJb155rfzK4+U8YNNiE5haAw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-promise-out/-/util-extends-promise-out-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-promise-safe@0.0.1-alpha.4":
+  "integrity" "sha512-MmIrxxPM/IaNIWexc/u19t4DGqKM8QHDoP8yAkE3IyQNDPkK4u+c31bfN7nDYG8eLDOjzzvMlV39SuXJLrDWSw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-promise-safe/-/util-extends-promise-safe-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-promise@0.0.1-alpha.4":
+  "integrity" "sha512-jVSQTC77GkVAgrYT3qP8uQfL8fkiKga7vOAy+YGIV/oFmlhME1Hz0cmfrgRbfeUuuZoUeef+bWHQ3rRA75ECxw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-promise/-/util-extends-promise-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-event" "0.0.1-alpha.4"
+    "@bfchain/util-extends-error" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise-safe" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-set@0.0.1-alpha.4":
+  "integrity" "sha512-XUh3EvnU/THMPucVE8ZMtMHSqxgqvtFVJdAZ+WdBL1APd+am/VZlZI1PDlD7lr4uLkM9FDSLCNQVka7XYo6FfQ=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-extends-set/-/util-extends-set-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-fast-deep-equal@0.0.1-alpha.4":
+  "integrity" "sha512-6PQBLd4qeq9IgKnJs/IpOQRxYdvCu5m5ZWt8v7xPZgOmyAyqofcWzFY+8tQOd1q0E6MfdKVsgFbfu8FsIQ800Q=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-fast-deep-equal/-/util-fast-deep-equal-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-type-detect" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-lock-atom@0.0.1-alpha.4":
+  "integrity" "sha512-32PjSDb1s3Za6P1CH1IVcex5c70ubk+vuahh/EofvQuDRVvt286Kh4pjez2GR+z98HLbwIKluVuxWEI3tEwk4w=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-lock-atom/-/util-lock-atom-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-logger@0.0.1-alpha.4":
+  "integrity" "sha512-mGqRg9u/8ECb0d4oG1LLx+KkQLa36xzLxsMDLv86IcuV6E7/s/tZ89uOMfNe6qcDbgClVhwYfdZRNBgNwWIGQg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-logger/-/util-logger-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-env" "0.0.1-alpha.4"
+    "@bfchain/util-extends-map" "0.0.1-alpha.4"
+    "@bfchain/util-ms" "0.0.1-alpha.4"
+    "@bfchain/util-platform" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-ms@0.0.1-alpha.4":
+  "integrity" "sha512-GcPILzPnhjaOlIOSiruh1nBhdohVI/MKExEtaVLNaE55yQ/6UZQVfPQRnzIhUPGXeEEh0OHzt+SplRVTkwxMOg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-ms/-/util-ms-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-platform@0.0.1-alpha.4":
+  "integrity" "sha512-OVvXOz404rSgIbnnkzhjdDDG0vpwdmHSYBqhQITm3WRvxZDhYRqNCiOKtArCeHvz/UYBfJNyMgUYHUfOMzXrlw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-platform/-/util-platform-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-type-detect@0.0.1-alpha.4":
+  "integrity" "sha512-xQr5AGNICPHWkiYEg+WOkJLLdHeDjKV6vMvzIns7OA72u0S8/2H1f6T0pXP3gPiTXRxVS5dvD1vteYKla5jjXg=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-type-detect/-/util-type-detect-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-typings@0.0.1-alpha.4":
+  "integrity" "sha512-c7MohWcOo6gqyxr/U1p8wOqWHoyUYP46fGmBprJSU80GQ2HQH/rs7G5XugltYZLR88DvhqBT65bngjVV4TAqAA=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util-typings/-/util-typings-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+
+"@bfchain/util@0.0.1-alpha.4":
+  "integrity" "sha512-crSF6W9NRtDSeQSsrX4SgX2HhFwXq8Kx8o5tksC4a8Fmx2zOggrXbLkA0SiBKr9kiTO/46LdPnMmKemHd8VPmw=="
+  "resolved" "https://registry.npmjs.org/@bfchain/util/-/util-0.0.1-alpha.4.tgz"
+  "version" "0.0.1-alpha.4"
+  dependencies:
+    "@bfchain/util-aborter" "0.0.1-alpha.4"
+    "@bfchain/util-buffer" "0.0.1-alpha.4"
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-deepcopy" "0.0.1-alpha.4"
+    "@bfchain/util-deepmix" "0.0.1-alpha.4"
+    "@bfchain/util-dep-inject" "0.0.1-alpha.4"
+    "@bfchain/util-encoding-binary" "0.0.1-alpha.4"
+    "@bfchain/util-encoding-hex" "0.0.1-alpha.4"
+    "@bfchain/util-encoding-utf8" "0.0.1-alpha.4"
+    "@bfchain/util-env" "0.0.1-alpha.4"
+    "@bfchain/util-event" "0.0.1-alpha.4"
+    "@bfchain/util-exception" "0.0.1-alpha.4"
+    "@bfchain/util-extends-error" "0.0.1-alpha.4"
+    "@bfchain/util-extends-function" "0.0.1-alpha.4"
+    "@bfchain/util-extends-iterator" "0.0.1-alpha.4"
+    "@bfchain/util-extends-map" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise" "0.0.1-alpha.4"
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-extends-set" "0.0.1-alpha.4"
+    "@bfchain/util-fast-deep-equal" "0.0.1-alpha.4"
+    "@bfchain/util-lock-atom" "0.0.1-alpha.4"
+    "@bfchain/util-logger" "0.0.1-alpha.4"
+    "@bfchain/util-ms" "0.0.1-alpha.4"
+    "@bfchain/util-platform" "0.0.1-alpha.4"
+    "@bfchain/util-type-detect" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfcs/util-evt-core-typings@^0.0.1-alpha.1", "@bfcs/util-evt-core-typings@0.0.1-alpha.1":
+  "integrity" "sha512-7aleEo9LPaF1KEdsaOfDAdZfQcvqNddagkPSYNUSYXIwW4YArJpRCXl002z76cm2q5ZtZHSjqddLJciDFWBXbQ=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-core-typings/-/util-evt-core-typings-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+
+"@bfcs/util-evt-core@^0.0.1-alpha.1", "@bfcs/util-evt-core@0.0.1-alpha.1":
+  "integrity" "sha512-Z0h59TGrbv1P2P3a9LcydG6GhBEKlQObnAtam4EQjQOC0AcoDCzutbZUHljMUp3l+BzXT7ZVpdYLuFL58qeJkw=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-core/-/util-evt-core-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfchain/util-decorator" "*"
+    "@bfcs/util-evt-core-typings" "0.0.1-alpha.1"
+
+"@bfcs/util-evt-filter-map@0.0.1-alpha.1":
+  "integrity" "sha512-9AgkQiR4SzsvjUNp7HPDGFXSCi54NZtACUbAD1OlTuWVsCslpOYvotSlsionRdoEvwqZIuBynrTw1SynV8uxBQ=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-filter-map/-/util-evt-filter-map-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core" "^0.0.1-alpha.1"
+
+"@bfcs/util-evt-stateful-typings@^0.0.1-alpha.1", "@bfcs/util-evt-stateful-typings@0.0.1-alpha.1":
+  "integrity" "sha512-eTvLIA38jMu4eFRtjr6u0sRBJMEJgsKiyfu0hHRDuCnDMIXbRCEu9KdnqY3fz5XxtLJ1HLM5F3y7NrQ2poFeNA=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-stateful-typings/-/util-evt-stateful-typings-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core-typings" "^0.0.1-alpha.1"
+
+"@bfcs/util-evt-stateful@0.0.1-alpha.1":
+  "integrity" "sha512-Zh4ZFlmrZHMbRf0npgii/T2ft9r6PB2ZIbOFh9bpWa6JoN0KUEoPD3grXZLGnknwKWH6GvlhYVIebz4S6KSzgg=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-stateful/-/util-evt-stateful-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core" "^0.0.1-alpha.1"
+    "@bfcs/util-evt-stateful-typings" "0.0.1-alpha.1"
+
+"@bfcs/util-evt-test@0.0.1-alpha.1":
+  "integrity" "sha512-wUCW1ZOdX2WVIl638Mwny0UtQAxhCu/DGi/8w5LTtI70a4uuomKqfLep8SZ8DG2P55kj7L/s84Ef5VOhRhjI4A=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-test/-/util-evt-test-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core" "^0.0.1-alpha.1"
+
+"@bfcs/util-evt-typings@0.0.1-alpha.1":
+  "integrity" "sha512-lYIseC3ojpho4MOxJ9s4MpPcPBNx4EGptN99FaQLD5/tQxvq9XbahzVUb9SNf6ZrMJQdMY80pJNXYDnZkISRzw=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-typings/-/util-evt-typings-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core-typings" "^0.0.1-alpha.1"
+    "@bfcs/util-evt-stateful-typings" "^0.0.1-alpha.1"
+
+"@bfcs/util-evt-wait-for@0.0.1-alpha.1":
+  "integrity" "sha512-W6znefN8RnikG8d1FGEu11/wSEPQ0lyFP6xqkY9l3sEd4+NHD6pjNIopn6WvxBlImCGvzN6mjLX9vOOxWETQkA=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt-wait-for/-/util-evt-wait-for-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core-typings" "^0.0.1-alpha.1"
+
+"@bfcs/util-evt@0.0.1-alpha.1":
+  "integrity" "sha512-ZZyx4XEQ8f9vHhPt5LB+4+i9nOpYbPeR7AxjChGjcWUnLMHwEWU3/FZjv3qbuogNK8JQ0z94mqh6OVcnpUtFsA=="
+  "resolved" "https://registry.npmjs.org/@bfcs/util-evt/-/util-evt-0.0.1-alpha.1.tgz"
+  "version" "0.0.1-alpha.1"
+  dependencies:
+    "@bfcs/util-evt-core" "0.0.1-alpha.1"
+    "@bfcs/util-evt-filter-map" "0.0.1-alpha.1"
+    "@bfcs/util-evt-stateful" "0.0.1-alpha.1"
+    "@bfcs/util-evt-test" "0.0.1-alpha.1"
+    "@bfcs/util-evt-typings" "0.0.1-alpha.1"
+    "@bfcs/util-evt-wait-for" "0.0.1-alpha.1"
 
 "@rollup/pluginutils@^4.1.1":
   "integrity" "sha512-clDjivHqWGXi7u+0d2r2sBi4Ie6VLEAzWMIkvJLnDmxoOhBYOTfzGbOQBA32THHm11/LiJbd01tJUpJsbshSWQ=="
@@ -421,6 +824,11 @@
   "version" "3.6.0"
   dependencies:
     "picomatch" "^2.2.1"
+
+"reflect-metadata@^0.1.13":
+  "integrity" "sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg=="
+  "resolved" "https://registry.npmjs.org/reflect-metadata/-/reflect-metadata-0.1.13.tgz"
+  "version" "0.1.13"
 
 "regenerator-runtime@^0.13.4":
   "integrity" "sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA=="

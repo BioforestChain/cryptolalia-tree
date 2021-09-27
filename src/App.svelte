@@ -144,10 +144,13 @@
       var(--overlay-color-1),
       var(--overlay-color-2)
     );
-    box-shadow: 3px 3px 6px #b2b2b2, -3px -3px 6px #ffffff;
+
+    --depth: 3px;
+    box-shadow: var(--depth) var(--depth) calc(2 * var(--depth)) #b2b2b2,
+      calc(-1 * var(--depth)) calc(-1 * var(--depth)) calc(2 * var(--depth)) #ffffff;
     cursor: pointer;
   }
-  :global(button:active, button.activing .button.activing) {
+  :global(button:active, button.activing, .button.activing) {
     --overlay-color-1: #c8c8c8;
     --overlay-color-2: #eeeeee;
     /* pointer-events: none; */
