@@ -177,12 +177,12 @@
               </div>
             {:else if sessionInfo.lastMsgPreview}
               <div class="last-msg" in:scale={{ duration: 300 }}>
-                  <span class="msg-preview">{sessionInfo.lastMsgPreview}</span>
-                  <span class="msg-time"
-                    >{new Date(
-                      sessionInfo.lastMsgTime,
-                    ).toLocaleTimeString()}</span
-                  >
+                <span class="msg-preview">{sessionInfo.lastMsgPreview}</span>
+                <span class="msg-time"
+                  >{new Date(
+                    sessionInfo.lastMsgTime,
+                  ).toLocaleTimeString()}</span
+                >
               </div>
             {/if}
           </li>

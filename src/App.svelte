@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Router, Route, Link } from "svelte-routing";
+  import { Router, Route, Link, createHistory } from "svelte-navigator";
   import Room from "./lib/Room.svelte";
   import Online from "./lib/Online.svelte";
 
-  function getProps({ location, href, isPartiallyCurrent, isCurrent }) {
+  function getLinkProps({ location, href, isPartiallyCurrent, isCurrent }) {
     const isActive = href === "/" ? isCurrent : isPartiallyCurrent || isCurrent;
 
     // The object returned here is spread on the anchor element's attributes
@@ -12,14 +12,57 @@
     }
     return { class: "nav-item" };
   }
+
+  import { createHashHistory } from "history";
+
+  function createHashSource() {
+    const history = createHashHistory({});
+    let listeners = [];
+
+    history.listen((location) => {
+      if (history.action === "POP") {
+        listeners.forEach((listener) => listener(location));
+      }
+    });
+
+    return {
+      get location() {
+        return history.location;
+      },
+      addEventListener(name, handler) {
+        if (name !== "popstate") return;
+        listeners.push(handler);
+      },
+      removeEventListener(name, handler) {
+        if (name !== "popstate") return;
+        listeners = listeners.filter((fn) => fn !== handler);
+      },
+      history: {
+        get state() {
+          return history.location.state;
+        },
+        pushState(state, title, uri) {
+          history.push(uri, state);
+        },
+        replaceState(state, title, uri) {
+          history.replace(uri, state);
+        },
+        go(to) {
+          history.go(to);
+        },
+      },
+    };
+  }
+
+  const memoryHistory = createHistory(createHashSource() as any);
 </script>
 
-<Router>
+<Router history={memoryHistory}>
   <header>
     <h1>Cryptolalia Demo</h1>
     <nav>
-      <Link {getProps} to="/">Local Chat Demo</Link>
-      <Link {getProps} to="/online">Chat Online Demo</Link>
+      <Link getProps={getLinkProps} to="/">Local Chat Demo</Link>
+      <Link getProps={getLinkProps} to="/online">Chat Online Demo</Link>
     </nav>
   </header>
   <main>
@@ -29,7 +72,7 @@
     <Route path="/online">
       <p class="tip">
         提示：该DEMO使用BroadcastChannel模块网络广播，<a
-          href="/online"
+          href={location.href}
           target="_blank">打开更多同域页面</a
         >即可多账户登录
       </p>
