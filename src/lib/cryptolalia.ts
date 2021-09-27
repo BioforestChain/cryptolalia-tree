@@ -36,9 +36,9 @@ export type MyMessage = {
   content: string;
   sender: string;
 };
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 {
-  const textEncoder = new TextEncoder();
-
   class MyMessageHelper extends MessageHelper<MyMessage> {
     getSignature(msg: MyMessage): Uint8Array {
       const binary = textEncoder.encode(JSON.stringify(msg));
@@ -150,6 +150,16 @@ export type MySessionInfo = {
   lastMsgTime: number;
   isCollection: boolean;
 };
+import { Dchat } from "@bfchain/bnrtc2-dchat";
+import {
+  DCHAT_DPORT_PREFIX,
+  MessageState,
+} from "@bfchain/bnrtc2-dchat-typings";
+import { bnrtc2Controller, bnrtc2Global } from "@bfchain/bnrtc2-client";
+bnrtc2Global.Channel = WebSocket.bind(self);
+bnrtc2Global.fetch = fetch.bind(self);
+
+import { PromiseOut } from "@bfchain/util-extends-promise-out";
 export type SwapMsg =
   | CryptolaliaTypes.Msg<undefined, { senderId: string }>
   | CryptolaliaTypes.Msg<{ senderId: string }, undefined>;
@@ -205,7 +215,7 @@ export const ChatsAppBuilder = (username: string) => {
         }
         return b.lastMsgTime - a.lastMsgTime;
       }
-      sendMessage(
+      async sendMessage(
         sessionInfo: {
           nickname: string;
           badge: number;
@@ -219,9 +229,26 @@ export const ChatsAppBuilder = (username: string) => {
         >,
       ) {
         this.bchanne.postMessage(["chatsApp", sessionInfo.nickname, msg]);
+
+        const remoteAddress = sessionInfo.nickname;
+        const dchat = this.dchat.value || (await this.dchat.promise);
+        const code = await dchat.send(
+          remoteAddress,
+          this.DCHAT_DPORT,
+          textEncoder.encode(JSON.stringify(msg)),
+        );
+        if (code == MessageState.Success) {
+          console.log("send msg to %s ok", remoteAddress);
+        } else {
+          console.log("send msg to %s failed %d", remoteAddress, code);
+        }
       }
+
       private bchanne = new BroadcastChannel("chatsApp");
-      bfOnInit() {
+      private dchat = new PromiseOut<Dchat>(); // new Dchat();
+      private DCHAT_DPORT = DCHAT_DPORT_PREFIX + "chatsApp";
+
+      async bfOnInit() {
         this.bchanne.addEventListener("message", (event) => {
           console.log("event", event.data);
           if (this.onNewMessage === undefined) {
@@ -236,6 +263,25 @@ export const ChatsAppBuilder = (username: string) => {
           ) {
             this.onNewMessage(data[2]);
           }
+        });
+
+        const dchat = new Dchat(
+          undefined,
+          {
+            ["C6MbP6yWiAi6rfRo8KBWrCv6tVW9q3r5D"]: 19888,
+            ["2et8jGb14fAfzQBNgLRHcwVxLd4Pif1mn"]: 19777,
+          }[this.localId],
+        );
+
+        console.log(
+          "bind local",
+          await bnrtc2Controller.bindAddress(this.localId),
+        );
+
+        this.dchat.resolve(dchat);
+        dchat.onMessage(this.DCHAT_DPORT, (address, dport, data) => {
+          this.onNewMessage(JSON.parse(textDecoder.decode(data)));
+          return true;
         });
       }
       onNewMessage?: CryptolaliaTypes.MessageChannel.Callback<MyChatsMsg>;
