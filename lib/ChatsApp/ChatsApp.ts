@@ -324,7 +324,7 @@ export class ChatsApp<
   }
 
   /**该函数与helper里的onNewMessage不一样，该函数时过滤掉垃圾、冗余信息后，真正需要发给用户的数据 */
-  onNewMessage?: ChatsApp.NewMessageCallback<[sessionId: string, message: D]>;
+  onNewMessage?: ChatsApp.NewMessageCallback<D>;
 
   async getMessageList(
     sessionId: string,
@@ -399,10 +399,9 @@ export declare namespace ChatsApp {
         msg: CryptolaliaTypes.Msg.In<W>,
       ];
 
-  type NewMessageCallback<
-    D,
-    W extends CryptolaliaTypes.Msg = CryptolaliaTypes.Msg,
-  > = CryptolaliaTypes.MessageChannel.Callback<ChatsMsg<D, W>>; // (event: SessionMsg<D>) => unknown;
+  type NewMessageCallback<D> = CryptolaliaTypes.MessageChannel.Callback<
+    CryptolaliaTypes.Msg<[sessionId: string, message: D], never>
+  >; // (event: SessionMsg<D>) => unknown;
 
   type ChatsMsg<
     D,
