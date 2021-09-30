@@ -24,6 +24,12 @@ export class CryptolaliaTimelineTree<D> {
   }
   private _store: Storage;
 
+  /**
+   *
+   * @todo 与addManyLeaf做一个合并，从而优化插入速度
+   * @param leaf
+   * @returns
+   */
   @requestTransaction([], "_store", "_trs")
   async addLeaf(leaf: D) {
     return this._addLeaf(leaf, await this._trs);

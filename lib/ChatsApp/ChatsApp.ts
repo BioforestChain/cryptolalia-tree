@@ -313,12 +313,15 @@ export class ChatsApp<
     }
     const lalia = this._getCryptolalia(sessionId);
     if (await lalia.cryptolalia.addMsg(message)) {
-      await this.helper.sendMessage(sessionInfo, [
-        CHATS_APP_MSG_TYPE.MSG,
-        sessionId,
-        message,
-      ]);
-      return true;
+      const res = {
+        locale: true,
+        remote: this.helper.sendMessage(sessionInfo, [
+          CHATS_APP_MSG_TYPE.MSG,
+          sessionId,
+          message,
+        ]),
+      };
+      return res;
     }
     return false;
   }
