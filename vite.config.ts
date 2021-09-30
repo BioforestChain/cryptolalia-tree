@@ -10,6 +10,11 @@ import type { InputOption, ModuleFormat } from "rollup";
 const libFormat = process.argv
   .find((arg) => arg.startsWith("--format="))
   ?.split("=")[1] as ModuleFormat;
+
+const targetPlatform = process.argv
+  .find((arg) => arg.startsWith("--platform="))
+  ?.split("=")[1] as "node" | "web";
+
 export const input: InputOption = {
   test: "test/test.ts",
   index: "src/index.ts",
@@ -122,7 +127,10 @@ export default defineConfig((info) => {
           resolveId(source) {
             // console.log(source);
             if (source.startsWith("#")) {
-              return subpathImports[source]?.default ?? null;
+              const imports = subpathImports[source];
+              if (imports) {
+                return imports[targetPlatform] ?? imports.default ?? null;
+              }
             }
             return null;
           },
