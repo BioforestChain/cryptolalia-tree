@@ -72,14 +72,18 @@ export class Cryptolalia<D> {
         branchMap.set(rawData.data.branchId, branchData);
       }
       if (branchData === undefined) {
-        throw new Error("数据发生了残缺丢失的问题，需要对数据重建索引");
+        console.error(
+          new Error("数据发生了残缺丢失的问题，需要对数据重建索引"),
+        );
+        continue;
       }
       const msgContent = this.timelineTree.getLeafFromBranchData(
         branchData,
         rawData.data.sign,
       );
       if (msgContent === undefined) {
-        throw new Error("数据发生了残缺丢失的问题，可能需要同步数据");
+        console.error(new Error("数据发生了残缺丢失的问题，可能需要同步数据"));
+        continue;
       }
       msgList.push({
         receiptTime: rawData.insertTime,

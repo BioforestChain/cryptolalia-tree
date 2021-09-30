@@ -8,6 +8,7 @@ import { Cryptolalia } from "../src/Cryptolalia";
 import { MessageHelper } from "../src/MessageHelper";
 import { CryptolaliaConfig } from "../src/CryptolaliaConfig";
 import { CryptolaliaSync } from "../src/CryptolaliaSync";
+import { TaskList } from "@bfchain/util";
 
 const moduleMap = new ModuleStroge();
 {
@@ -126,8 +127,36 @@ const cryptolalia2 = Resolve<Cryptolalia<MyMessage>>(Cryptolalia, moduleMap2);
   );
 
   // console.log(await cryptolalia1.timelineTree.getBranchRoute(Date.now()));
-  await cryptolalia1.sync.doSync();
-  await cryptolalia2.sync.doSync();
+  const tasks = new TaskList();
+  tasks.next = cryptolalia1.sync.doSync();
+  tasks.next = cryptolalia2.sync.doSync();
+  for (let i = 0; i < 10; ++i) {
+    tasks.next = cryptolalia1.addMsg({
+      content: "gaubee noise" + i,
+      sender: "gaubee",
+      time: Date.now() + Math.random(),
+    });
+  }
+  for (let i = 0; i < 10; ++i) {
+    tasks.next = cryptolalia2.addMsg({
+      content: "bangeel noise" + i,
+      sender: "bangeel",
+      time: Date.now() + Math.random(),
+    });
+  }
+
+  const logMsgList = (msgList: Cryptolalia.CryptolaliaMessage<MyMessage>[]) => {
+    console.log("+++++++++++");
+    console.log(msgList.map((msg) => msg.content.content));
+    console.log("-----------");
+  };
+
+  logMsgList(await cryptolalia1.getMsgList(Date.now() + 10));
+  logMsgList(await cryptolalia2.getMsgList(Date.now() + 10));
+
+  await tasks.toPromise();
+  logMsgList(await cryptolalia1.getMsgList(Date.now() + 10));
+  logMsgList(await cryptolalia2.getMsgList(Date.now() + 10));
 
   // console.group("cryptolalia1");
   // const dataList1 = await cryptolalia1.getMsgList(Date.now());

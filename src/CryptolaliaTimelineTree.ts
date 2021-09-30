@@ -24,8 +24,9 @@ export class CryptolaliaTimelineTree<D> {
   }
   private _store: Storage;
 
-  addLeaf(leaf: D) {
-    return this._addLeaf(leaf, this._store);
+  @requestTransaction([], "_store", "_trs")
+  async addLeaf(leaf: D) {
+    return this._addLeaf(leaf, await this._trs);
   }
 
   @requestTransaction([], "_store", "_trs")
