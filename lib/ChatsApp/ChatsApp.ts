@@ -84,11 +84,11 @@ export class ChatsApp<
             if (sessionInfo === undefined) {
               return;
             }
-            const lalia = this._laliaMap.get(msg[1]);
-            if (lalia !== undefined) {
-              if (true === (await lalia.cryptolalia.addMsg(msg[2]))) {
-                await this.onNewMessage?.([msg[1], msg[2]]);
-              }
+            // 这里强行把会话建立起来，即便还没有开始初始化同步，先把消息接收下来。以免等一下对面就下线了
+            // 同时handshakeSession之后也默认不会建立lalia，所以这里需要强行建立，不然就没有通知了
+            const lalia = this._getCryptolalia(msg[1]);
+            if (true === (await lalia.cryptolalia.addMsg(msg[2]))) {
+              await this.onNewMessage?.([msg[1], msg[2]]);
             }
           }
           break;

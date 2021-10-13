@@ -68,7 +68,7 @@
       "require": "./dist/cjs/ChatsApp.cjs"
     }
   },
-  "types": "./src/index.ts",
+  "types": "./typings.d.ts",
   "imports": {
     "#TimeHelper": {
       "node": "./lib/TimeHelper.node.ts",
