@@ -93,6 +93,10 @@ export class Cryptolalia<D> {
 
     return msgList;
   }
+
+  clear() {
+    return this.storage.del([]);
+  }
 }
 
 export declare namespace Cryptolalia {

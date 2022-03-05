@@ -1,6 +1,6 @@
-import { CryptoHelper } from "#CryptoHelper";
-import { FilesystemStorage } from "#Storage.fs";
-import { TimeHelper } from "#TimeHelper";
+import { CryptoHelper } from "@bfchain/cryptolalia-tree/lib/CryptoHelper";
+import { FilesystemStorage } from "@bfchain/cryptolalia-tree/lib/Storage.fs";
+import { TimeHelper } from "@bfchain/cryptolalia-tree/lib/TimeHelper";
 import { ModuleStroge, Resolve } from "@bfchain/util-dep-inject";
 import { createHash } from "node:crypto";
 import path from "node:path";

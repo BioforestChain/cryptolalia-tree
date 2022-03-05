@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@bfchain/cryptolalia-tree@link:.":
+  version "0.0.0"
+  uid ""
+
 "@bfchain/util-aborter@0.0.1-alpha.4":
   version "0.0.1-alpha.4"
   resolved "https://registry.npmjs.org/@bfchain/util-aborter/-/util-aborter-0.0.1-alpha.4.tgz"
@@ -249,9 +253,9 @@
   resolved "https://registry.npmjs.org/@bfchain/util-typings/-/util-typings-0.0.1-alpha.4.tgz"
   integrity sha512-c7MohWcOo6gqyxr/U1p8wOqWHoyUYP46fGmBprJSU80GQ2HQH/rs7G5XugltYZLR88DvhqBT65bngjVV4TAqAA==
 
-"@bfchain/util@^0.0.1-alpha.4":
+"@bfchain/util@*":
   version "0.0.1-alpha.4"
-  resolved "https://registry.npmjs.org/@bfchain/util/-/util-0.0.1-alpha.4.tgz"
+  resolved "https://registry.yarnpkg.com/@bfchain/util/-/util-0.0.1-alpha.4.tgz#e38cebe9910e1852d6d89b87401bbd240d55fcef"
   integrity sha512-crSF6W9NRtDSeQSsrX4SgX2HhFwXq8Kx8o5tksC4a8Fmx2zOggrXbLkA0SiBKr9kiTO/46LdPnMmKemHd8VPmw==
   dependencies:
     "@bfchain/util-aborter" "0.0.1-alpha.4"

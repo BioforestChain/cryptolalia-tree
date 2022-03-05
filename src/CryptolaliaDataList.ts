@@ -1,4 +1,4 @@
-import { TimeHelper } from "#TimeHelper";
+import { TimeHelper } from "@bfchain/cryptolalia-tree/lib/TimeHelper";
 import { Injectable } from "@bfchain/util-dep-inject";
 import { PromiseOut } from "@bfchain/util-extends-promise-out";
 import { getJsObject } from "./core";

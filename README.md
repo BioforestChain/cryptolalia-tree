@@ -47,15 +47,15 @@ await cryptolalia1.addMsg({
 
 该项目提供了除了算法，还有一些与 platform 相关的适配模块，主要是 nodejs 与 web 这两个平台。
 
-- @bfchain/cryptolalia-tree/lib/CryptoHelper.node
-- @bfchain/cryptolalia-tree/lib/CryptoHelper.web
-- @bfchain/cryptolalia-tree/lib/CryptoHelper
-- @bfchain/cryptolalia-tree/lib/Storage.fs.node
-- @bfchain/cryptolalia-tree/lib/Storage.fs.web
-- @bfchain/cryptolalia-tree/lib/Storage.fs
-- @bfchain/cryptolalia-tree/lib/TimeHelper.node
-- @bfchain/cryptolalia-tree/lib/TimeHelper.web
-- @bfchain/cryptolalia-tree/lib/TimeHelper
+- @bfchain/cryptolalia-tree/dist/types/lib/CryptoHelper.web.node
+- @bfchain/cryptolalia-tree/dist/types/lib/CryptoHelper.web.web
+- @bfchain/cryptolalia-tree/dist/types/lib/CryptoHelper.web
+- @bfchain/cryptolalia-tree/dist/types/lib/Storage.fs.web.node
+- @bfchain/cryptolalia-tree/dist/types/lib/Storage.fs.web.web
+- @bfchain/cryptolalia-tree/dist/types/lib/Storage.fs.web
+- @bfchain/cryptolalia-tree/dist/types/lib/TimeHelper.web.node
+- @bfchain/cryptolalia-tree/dist/types/lib/TimeHelper.web.web
+- @bfchain/cryptolalia-tree/dist/types/lib/TimeHelper.web
 
 ## DEMO
 

@@ -120,7 +120,20 @@ export default defineConfig((info) => {
         const packageJson = JSON.parse(
           fs.readFileSync(packageFilepath, "utf-8"),
         );
-        const subpathImports = packageJson.imports || {};
+        const subpathImports = {
+          "@bfchain/cryptolalia-tree/lib/TimeHelper": {
+            node: "./lib/TimeHelper.node.ts",
+            default: "./lib/TimeHelper.web.ts",
+          },
+          "@bfchain/cryptolalia-tree/lib/CryptoHelper": {
+            node: "./lib/CryptoHelper.node.ts",
+            default: "./lib/CryptoHelper.web.ts",
+          },
+          "@bfchain/cryptolalia-tree/lib/Storage.fs": {
+            node: "./lib/Storage.fs.node.ts",
+            default: "./lib/Storage.fs.web.ts",
+          },
+        };
         // console.log(subpathImports);
         return {
           name: "Subpath imports",

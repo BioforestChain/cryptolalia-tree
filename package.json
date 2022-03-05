@@ -1,86 +1,123 @@
 {
   "name": "@bfchain/cryptolalia-tree",
-  "version": "1.4.1",
+  "version": "1.4.12",
   "description": "使用区块链的技术，对信息进行非对称加密，以及不可篡改的保护。",
   "main": "./dist/cryptolalia-tree.es.js",
   "type": "module",
   "exports": {
     ".": {
       "import": "./dist/es/index.mjs",
+      "types": "./dist/types/src/index.d.ts",
       "require": "./dist/cjs/index.cjs"
     },
     "./lib/CryptoHelper.node": {
       "import": "./dist/es/CryptoHelper.node.mjs",
+      "types": "./dist/types/lib/CryptoHelper.node.d.ts",
       "require": "./dist/cjs/CryptoHelper.node.cjs"
     },
     "./lib/CryptoHelper.web": {
       "import": "./dist/es/CryptoHelper.web.mjs",
+      "types": "./dist/types/lib/CryptoHelper.web.d.ts",
       "require": "./dist/cjs/CryptoHelper.web.cjs"
     },
     "./lib/CryptoHelper": {
       "node": {
         "import": "./dist/es/CryptoHelper.node.mjs",
+        "types": "./dist/types/lib/CryptoHelper.node.d.ts",
         "require": "./dist/cjs/CryptoHelper.node.cjs"
       },
       "default": {
         "import": "./dist/es/CryptoHelper.web.mjs",
+        "types": "./dist/types/lib/CryptoHelper.web.d.ts",
         "require": "./dist/cjs/CryptoHelper.web.cjs"
       }
     },
     "./lib/Storage.fs.node": {
       "import": "./dist/es/Storage.fs.node.mjs",
+      "types": "./dist/types/lib/Storage.fs.node.d.ts",
       "require": "./dist/cjs/Storage.fs.node.cjs"
     },
     "./lib/Storage.fs.web": {
       "import": "./dist/es/Storage.fs.web.mjs",
+      "types": "./dist/types/lib/Storage.fs.web.d.ts",
       "require": "./dist/cjs/Storage.fs.web.cjs"
     },
     "./lib/Storage.fs": {
       "node": {
         "import": "./dist/es/Storage.fs.node.mjs",
+        "types": "./dist/types/lib/Storage.fs.node.d.ts",
         "require": "./dist/cjs/Storage.fs.node.cjs"
       },
       "default": {
         "import": "./dist/es/Storage.fs.web.mjs",
+        "types": "./dist/types/lib/Storage.fs.web.d.ts",
         "require": "./dist/cjs/Storage.fs.web.cjs"
       }
     },
     "./lib/TimeHelper.node": {
       "import": "./dist/es/TimeHelper.node.mjs",
+      "types": "./dist/types/lib/TimeHelper.node.d.ts",
       "require": "./dist/cjs/TimeHelper.node.cjs"
     },
     "./lib/TimeHelper.web": {
       "import": "./dist/es/TimeHelper.web.mjs",
+      "types": "./dist/types/lib/TimeHelper.web.d.ts",
       "require": "./dist/cjs/TimeHelper.web.cjs"
     },
     "./lib/TimeHelper": {
       "node": {
         "import": "./dist/es/TimeHelper.node.mjs",
+        "types": "./dist/types/lib/TimeHelper.node.d.ts",
         "require": "./dist/cjs/TimeHelper.node.cjs"
       },
       "default": {
         "import": "./dist/es/TimeHelper.web.mjs",
+        "types": "./dist/types/lib/TimeHelper.web.d.ts",
         "require": "./dist/cjs/TimeHelper.web.cjs"
       }
     },
     "./lib/ChatsApp": {
       "import": "./dist/es/ChatsApp.mjs",
+      "types": "./dist/types/lib/ChatsApp/index.d.ts",
       "require": "./dist/cjs/ChatsApp.cjs"
     }
   },
-  "types": "./typings.d.ts",
-  "imports": {
-    "#TimeHelper": {
-      "node": "./lib/TimeHelper.node.ts",
-      "default": "./lib/TimeHelper.web.ts"
-    },
-    "#CryptoHelper": {
-      "node": "./lib/CryptoHelper.node.ts",
-      "default": "./lib/CryptoHelper.web.ts"
-    },
-    "#Storage.fs": {
-      "node": "./lib/Storage.fs.node.ts",
-      "default": "./lib/Storage.fs.web.ts"
+  "types": "./dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "lib/CryptoHelper.node": [
+        "./dist/types/lib/CryptoHelper.node.d.ts"
+      ],
+      "lib/CryptoHelper.web": [
+        "./dist/types/lib/CryptoHelper.web.d.ts"
+      ],
+      "lib/CryptoHelper": [
+        "./dist/types/lib/CryptoHelper.node.d.ts",
+        "./dist/types/lib/CryptoHelper.web.d.ts"
+      ],
+      "lib/Storage.fs.node": [
+        "./dist/types/lib/Storage.fs.node.d.ts"
+      ],
+      "lib/Storage.fs.web": [
+        "./dist/types/lib/Storage.fs.web.d.ts"
+      ],
+      "lib/Storage.fs": [
+        "./dist/types/lib/Storage.fs.node.d.ts",
+        "./dist/types/lib/Storage.fs.web.d.ts"
+      ],
+      "lib/TimeHelper.node": [
+        "./dist/types/lib/TimeHelper.node.d.ts"
+      ],
+      "lib/TimeHelper.web": [
+        "./dist/types/lib/TimeHelper.web.d.ts"
+      ],
+      "lib/TimeHelper": [
+        "./dist/types/lib/TimeHelper.node.d.ts",
+        "./dist/types/lib/TimeHelper.web.d.ts"
+      ],
+      "lib/ChatsApp": [
+        "./dist/types/lib/ChatsApp/index.d.ts"
+      ]
     }
   },
   "scripts": {
@@ -95,19 +132,18 @@
     "vite": "vite"
   },
   "files": [
-    "dist",
-    "src",
-    "lib"
+    "dist"
   ],
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@bfchain/util": "^0.0.1-alpha.4",
+    "@bfchain/util": "*",
     "idb": "^6.1.4",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@bfchain/cryptolalia-tree": "link:./",
     "@types/js-yaml": "^4.0.3",
     "@types/node": "^16.9.1",
     "esbuild-plugin-tsc": "^0.3.0",
