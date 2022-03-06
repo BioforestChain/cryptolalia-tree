@@ -8,6 +8,7 @@ import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { MessageHelper } from "./MessageHelper";
 import { Storage } from "./Storage";
 import { TimeHelper } from "./TimeHelper";
+import { CryptolaliaTypes } from "./@types";
 
 @Injectable()
 export class Cryptolalia<D> {
@@ -25,15 +26,18 @@ export class Cryptolalia<D> {
     return addMsg(this.msgHelper, this.timelineTree, this.dataList, msg);
   }
 
+  $getMsgListOptionsToQuery(
+    options: CryptolaliaTypes.GetMsgListOptions = {},
+  ): CryptolaliaTypes.GetMsgListQuery {
+    const { offset = 0, limit = 40, order = ORDER.DOWN } = options;
+    return { offset, limit, order };
+  }
+
   async getMsgList(
     timestamp: number,
-    query: {
-      offset?: number;
-      limit?: number;
-      order?: ORDER;
-    } = {},
+    options: CryptolaliaTypes.GetMsgListOptions = {},
   ) {
-    const { offset = 0, limit = 40, order = ORDER.DOWN } = query;
+    const { offset, limit, order } = this.$getMsgListOptionsToQuery(options);
 
     const rawDataList: CryptolaliaDataList.DataItem<CryptolaliaCore.RawDataItem>[] =
       [];

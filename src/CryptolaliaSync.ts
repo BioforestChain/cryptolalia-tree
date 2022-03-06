@@ -3,6 +3,7 @@ import { Inject, Injectable } from "@bfchain/util-dep-inject";
 import { PromiseOut } from "@bfchain/util-extends-promise-out";
 import { CryptolaliaTypes } from "./@types";
 import { addManyMsg, CryptolaliaCore } from "./core";
+import { CryptolaliaConfig } from "./CryptolaliaConfig";
 import { CryptolaliaDataList } from "./CryptolaliaDataList";
 import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { MessageHelper } from "./MessageHelper";
@@ -23,6 +24,7 @@ export class CryptolaliaSync<D = unknown> {
     private dataList: CryptolaliaDataList<CryptolaliaCore.RawDataItem>,
     private timeHelper: TimeHelper,
     private msgHelper: MessageHelper<D>,
+    private config: CryptolaliaConfig,
   ) {
     /// 监听数据请求，提供数据响应服务
     syncChannel.onMessage = (data) => {
@@ -487,7 +489,10 @@ export declare namespace CryptolaliaSync {
   }
   namespace Sync {
     type BranchRouteMsg<D> = ReqResMsg<
-      { cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE; leafTime: number },
+      {
+        cmd: SYNC_MSG_CMD.GET_BRANCH_ROUTE;
+        leafTime: number;
+      },
       BFChainUtil.PromiseReturnType<
         CryptolaliaTimelineTree<D>["getBranchRoute"]
       >

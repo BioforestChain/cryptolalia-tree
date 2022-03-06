@@ -1,3 +1,5 @@
+import { ORDER } from "./CryptolaliaDataList";
+
 export declare namespace CryptolaliaTypes {
   export interface MessageChannel<T extends Msg> {
     postMessage(msg: MessageChannel.Event<T>): void;
@@ -19,4 +21,11 @@ export declare namespace CryptolaliaTypes {
         : unknown
       : unknown;
   }
+
+  export type GetMsgListQuery = {
+    offset: number;
+    limit: number;
+    order: ORDER;
+  };
+  export type GetMsgListOptions = Partial<GetMsgListQuery>;
 }

@@ -517,7 +517,7 @@ export class CryptolaliaDataList<D> {
   }
 }
 
-export const enum ORDER {
+export enum ORDER {
   UP = 1,
   DOWN = -1,
 }

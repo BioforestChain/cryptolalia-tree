@@ -8,7 +8,7 @@ import { Cryptolalia } from "../src/Cryptolalia";
 import { MessageHelper } from "../src/MessageHelper";
 import { CryptolaliaConfig } from "../src/CryptolaliaConfig";
 import { CryptolaliaSync } from "../src/CryptolaliaSync";
-import { TaskList } from "@bfchain/util";
+import { TaskList } from "@bfchain/util-extends-promise";
 
 const moduleMap = new ModuleStroge();
 {
