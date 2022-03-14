@@ -1,6 +1,6 @@
 import { Injectable } from "@bfchain/util-dep-inject";
 import type { ChatsApp } from "./ChatsApp";
-import { CryptolaliaTypes } from "../../src/@types";
+import { CryptolaliaTypes } from "../src/typings";
 
 /**
  * 提供对泛型数据统一的信息读取解析的工具函数

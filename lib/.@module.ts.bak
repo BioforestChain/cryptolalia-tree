@@ -1,0 +1,83 @@
+declare module "@bfchain/cryptolalia-tree/lib/TimeHelper.node" {
+  export const TimeHelper: new (
+    ...args: ConstructorParameters<
+      typeof import("./TimeHelper.node").TimeHelper
+    >
+  ) => import("./TimeHelper.node").TimeHelper;
+}
+declare module "@bfchain/cryptolalia-tree/lib/TimeHelper.web" {
+  export const TimeHelper: new (
+    ...args: ConstructorParameters<typeof import("./TimeHelper.web").TimeHelper>
+  ) => import("./TimeHelper.web").TimeHelper;
+}
+declare module "@bfchain/cryptolalia-tree/lib/TimeHelper" {
+  export const TimeHelper:
+    | (new (
+        ...args: ConstructorParameters<
+          typeof import("./TimeHelper.web").TimeHelper
+        >
+      ) => import("./TimeHelper.web").TimeHelper)
+    | (new (
+        ...args: ConstructorParameters<
+          typeof import("./TimeHelper.node").TimeHelper
+        >
+      ) => import("./TimeHelper.node").TimeHelper);
+}
+
+declare module "@bfchain/cryptolalia-tree/lib/Storage.fs.node" {
+  export const FilesystemStorage: new (
+    ...args: ConstructorParameters<
+      typeof import("./Storage.fs.node").FilesystemStorage
+    >
+  ) => import("./Storage.fs.node").FilesystemStorage;
+}
+declare module "@bfchain/cryptolalia-tree/lib/Storage.fs.web" {
+  export const FilesystemStorage: new (
+    ...args: ConstructorParameters<
+      typeof import("./Storage.fs.web").FilesystemStorage
+    >
+  ) => import("./Storage.fs.web").FilesystemStorage;
+}
+
+declare module "@bfchain/cryptolalia-tree/lib/Storage.fs" {
+  export const FilesystemStorage:
+    | (new (
+        ...args: ConstructorParameters<
+          typeof import("./Storage.fs.web").FilesystemStorage
+        >
+      ) => import("./Storage.fs.web").FilesystemStorage)
+    | (new (
+        ...args: ConstructorParameters<
+          typeof import("./Storage.fs.node").FilesystemStorage
+        >
+      ) => import("./Storage.fs.node").FilesystemStorage);
+}
+
+declare module "@bfchain/cryptolalia-tree/lib/CryptoHelper.node" {
+  export const CryptoHelper: new (
+    ...args: ConstructorParameters<
+      typeof import("./CryptoHelper.node").CryptoHelper
+    >
+  ) => import("./CryptoHelper.node").CryptoHelper;
+}
+declare module "@bfchain/cryptolalia-tree/lib/CryptoHelper.web" {
+  export const CryptoHelper: new (
+    ...args: ConstructorParameters<
+      typeof import("./CryptoHelper.web").CryptoHelper
+    >
+  ) => import("./CryptoHelper.web").CryptoHelper;
+}
+
+declare module "@bfchain/cryptolalia-tree/lib/CryptoHelper" {
+  export const CryptoHelper:
+    | (new (
+        ...args: ConstructorParameters<
+          typeof import("./CryptoHelper.web").CryptoHelper
+        >
+      ) => import("./CryptoHelper.web").CryptoHelper)
+    | (new (
+        ...args: ConstructorParameters<
+          typeof import("./CryptoHelper.node").CryptoHelper
+        >
+      ) => import("./CryptoHelper.node").CryptoHelper);
+}

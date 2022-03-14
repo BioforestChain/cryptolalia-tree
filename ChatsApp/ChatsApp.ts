@@ -16,8 +16,8 @@ import {
   CryptoHelper,
   requestTransaction,
   TransactionStorage,
-} from "../../src/index";
-import { CryptolaliaTypes } from "../../src/@types";
+} from "../src/index";
+import { CryptolaliaTypes } from "../src/typings";
 import { ChatsAppHelper } from "./Helper";
 
 const ARGS = {

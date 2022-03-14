@@ -8,7 +8,7 @@ import { CryptolaliaTimelineTree } from "./CryptolaliaTimelineTree";
 import { MessageHelper } from "./MessageHelper";
 import { Storage } from "./Storage";
 import { TimeHelper } from "./TimeHelper";
-import { CryptolaliaTypes } from "./@types";
+import { CryptolaliaTypes } from "./typings";
 
 @Injectable()
 export class Cryptolalia<D> {
