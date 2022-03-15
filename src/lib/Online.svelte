@@ -180,7 +180,7 @@
                 <span class="msg-preview">{sessionInfo.lastMsgPreview}</span>
                 <span class="msg-time"
                   >{new Date(
-                    sessionInfo.lastMsgTime,
+                    sessionInfo.lastMsgTime
                   ).toLocaleTimeString()}</span
                 >
               </div>

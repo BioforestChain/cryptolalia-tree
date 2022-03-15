@@ -9,6 +9,47 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@bfchain/cryptolalia-tree@link:../cryptolalia-tree-bfsp":
+  version "0.0.0"
+  uid ""
+
+"@bfchain/util-decorator@0.0.1-alpha.4":
+  version "0.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@bfchain/util-decorator/-/util-decorator-0.0.1-alpha.4.tgz#58e2a636c3513f9cabce6598435f9f6a901668d9"
+  integrity sha512-K/RBBio9UQ5x54ETcYX75wH4BqzELi3Q52h8nsQB2RQ28BxN6UMPcJbXQLanHyDewjDx2eudKlZ7A++VFzdcHQ==
+  dependencies:
+    "@bfchain/util-extends-promise-out" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-dep-inject@0.0.1-alpha.4", "@bfchain/util-dep-inject@^0.0.1-alpha.4":
+  version "0.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@bfchain/util-dep-inject/-/util-dep-inject-0.0.1-alpha.4.tgz#30ac0abb096a700efe298d5ed9dfedd844556250"
+  integrity sha512-qXqIZ45yCPASvAebsckq7dVWBKQHZSa3Pb4YKcOUbLnwFeXm/v2rMeBUzxtWQhqMy/W0l7RpxLihfJ621xCBUg==
+  dependencies:
+    "@bfchain/util-extends-map" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+    reflect-metadata "^0.1.13"
+
+"@bfchain/util-extends-map@0.0.1-alpha.4":
+  version "0.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@bfchain/util-extends-map/-/util-extends-map-0.0.1-alpha.4.tgz#7c168b1300c338edd7fd9e71f569647df50fda6a"
+  integrity sha512-fhcgAqTjDsi1LDU8i3/qFKJ+VL4hPFv2R2GG3Fqdu7a5lNkZwPR7CnH/HCw1spWbctszttcmmXIlKGo/fGEFIw==
+  dependencies:
+    "@bfchain/util-decorator" "0.0.1-alpha.4"
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-extends-promise-out@0.0.1-alpha.4":
+  version "0.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@bfchain/util-extends-promise-out/-/util-extends-promise-out-0.0.1-alpha.4.tgz#892b76ef0a5b39472e39f2bde62404373de43039"
+  integrity sha512-3Oxx4Um7peFZd5F+RgcEvjInePw5u10xU8OhwSsWWggtfWXDCyXg+9KgK4XP2ALJb155rfzK4+U8YNNiE5haAw==
+  dependencies:
+    "@bfchain/util-typings" "0.0.1-alpha.4"
+
+"@bfchain/util-typings@0.0.1-alpha.4":
+  version "0.0.1-alpha.4"
+  resolved "https://registry.yarnpkg.com/@bfchain/util-typings/-/util-typings-0.0.1-alpha.4.tgz#3fddfd7c52275ac7eb686a5c169b9d5340a22fcd"
+  integrity sha512-c7MohWcOo6gqyxr/U1p8wOqWHoyUYP46fGmBprJSU80GQ2HQH/rs7G5XugltYZLR88DvhqBT65bngjVV4TAqAA==
+
 "@rollup/pluginutils@^4.1.1":
   version "4.1.1"
   resolved "https://registry.npmjs.org/@rollup/pluginutils/-/pluginutils-4.1.1.tgz"
@@ -65,6 +106,11 @@ anymatch@~3.1.2:
   dependencies:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
+
+argparse@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/argparse/-/argparse-2.0.1.tgz#246f50f3ca78a3240f6c997e8a9bd1eac49e4b38"
+  integrity sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
 
 balanced-match@^1.0.0:
   version "1.0.2"
@@ -243,6 +289,11 @@ history@^5.0.1:
   dependencies:
     "@babel/runtime" "^7.7.6"
 
+idb@^7.0.0:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/idb/-/idb-7.0.1.tgz#d2875b3a2f205d854ee307f6d196f246fea590a7"
+  integrity sha512-UUxlE7vGWK5RfB/fDwEGgRf84DY/ieqNha6msMV99UsEMQhJ1RwbCd8AYBj3QMgnE3VZnfQvm4oKVCJTYlqIgg==
+
 import-fresh@^3.2.1:
   version "3.3.0"
   resolved "https://registry.npmjs.org/import-fresh/-/import-fresh-3.3.0.tgz"
@@ -294,6 +345,13 @@ is-number@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz"
   integrity sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==
+
+js-yaml@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.1.0.tgz#c1fb65f8f5017901cdd2c951864ba18458a10602"
+  integrity sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==
+  dependencies:
+    argparse "^2.0.1"
 
 kleur@^4.1.4:
   version "4.1.4"
@@ -418,6 +476,11 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
+
+reflect-metadata@^0.1.13:
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
+  integrity sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
 
 regenerator-runtime@^0.13.4:
   version "0.13.9"

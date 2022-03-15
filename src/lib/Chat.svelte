@@ -1,4 +1,5 @@
 <script lang="ts">
+  import "@bfchain/util-typings";
   import { onMount } from "svelte";
   import { fly } from "svelte/transition";
   import type { MyMessage } from "./superCryptolalia";
@@ -50,7 +51,7 @@
     }
   };
   export let doSend: (text: string) => BFChainUtil.PromiseMaybe<unknown> = (
-    text: string,
+    text: string
   ) => {};
   export let doSync: () => BFChainUtil.PromiseMaybe<unknown> = () => {};
   export let getList: () => BFChainUtil.PromiseMaybe<MyMessage[]> = () => {

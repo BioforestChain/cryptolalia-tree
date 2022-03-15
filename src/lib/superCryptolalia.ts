@@ -6,13 +6,10 @@ import {
   MessageHelper,
   ORDER,
 } from "@bfchain/cryptolalia-tree";
-import {
-  ChatsApp,
-  ChatsAppHelper,
-} from "@bfchain/cryptolalia-tree/lib/ChatsApp";
-import { CryptoHelper } from "@bfchain/cryptolalia-tree/lib/CryptoHelper.web";
-import { FilesystemStorage } from "@bfchain/cryptolalia-tree/lib/Storage.fs.web";
-import { TimeHelper } from "@bfchain/cryptolalia-tree/lib/TimeHelper.web";
+import { ChatsApp, ChatsAppHelper } from "@bfchain/cryptolalia-tree/ChatsApp";
+import { CryptoHelper } from "@bfchain/cryptolalia-tree/web/CryptoHelper";
+import { FilesystemStorage } from "@bfchain/cryptolalia-tree/web/Storage.fs";
+import { TimeHelper } from "@bfchain/cryptolalia-tree/web/TimeHelper";
 import {
   getInjectionToken,
   Inject,
@@ -21,7 +18,6 @@ import {
   OnInit,
   Resolve,
 } from "@bfchain/util-dep-inject";
-import { PromiseOut } from "@bfchain/util-extends-promise-out";
 
 const moduleMap = new ModuleStroge();
 {
